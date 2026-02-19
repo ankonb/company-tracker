@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Building2, Globe, Tag, Layers, FolderOpen } from 'lucide-react';
+import { Building2, Globe, Layers } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -50,6 +50,18 @@ export const AddCompanyModal = ({ open, onClose, onAdd }) => {
 
   const revenueRanges = ['< $1M', '$1M–$10M', '$10M–$50M', '$50M–$100M', '$100M–$250M', '$250M+'];
 
+  const inputStyle = {
+    background: 'hsl(var(--secondary))',
+    border: '1px solid hsl(var(--border))',
+    color: 'hsl(var(--foreground))',
+  };
+
+  const errorInputStyle = {
+    background: 'hsl(var(--secondary))',
+    border: '1px solid hsl(var(--destructive))',
+    color: 'hsl(var(--foreground))',
+  };
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent
@@ -58,13 +70,14 @@ export const AddCompanyModal = ({ open, onClose, onAdd }) => {
           background: 'hsl(var(--card))',
           border: '1px solid hsl(var(--border))',
           borderRadius: '12px',
+          boxShadow: '0 20px 60px hsl(220 15% 60% / 0.2)',
         }}
       >
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-base font-semibold">
+          <DialogTitle className="flex items-center gap-2 text-base font-semibold" style={{ color: 'hsl(var(--foreground))' }}>
             <span
               className="w-7 h-7 rounded-md flex items-center justify-center"
-              style={{ background: 'hsl(var(--primary) / 0.15)', border: '1px solid hsl(var(--primary) / 0.3)' }}
+              style={{ background: 'hsl(var(--primary) / 0.1)', border: '1.5px solid hsl(var(--primary) / 0.35)' }}
             >
               <Building2 size={14} style={{ color: 'hsl(var(--primary))' }} />
             </span>
@@ -85,10 +98,7 @@ export const AddCompanyModal = ({ open, onClose, onAdd }) => {
                 onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                 placeholder="e.g. PayFlow Technologies"
                 className="pl-8 h-9 text-sm"
-                style={{
-                  background: 'hsl(var(--secondary))',
-                  border: errors.name ? '1px solid hsl(var(--destructive))' : '1px solid hsl(var(--border))',
-                }}
+                style={errors.name ? errorInputStyle : inputStyle}
               />
             </div>
             {errors.name && <p className="text-xs mt-1" style={{ color: 'hsl(var(--destructive))' }}>{errors.name}</p>}
@@ -106,7 +116,7 @@ export const AddCompanyModal = ({ open, onClose, onAdd }) => {
                 onChange={e => setForm(f => ({ ...f, website: e.target.value }))}
                 placeholder="https://company.com"
                 className="pl-8 h-9 text-sm"
-                style={{ background: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))' }}
+                style={inputStyle}
               />
             </div>
           </div>
@@ -121,14 +131,11 @@ export const AddCompanyModal = ({ open, onClose, onAdd }) => {
                 <Select value={form.sector} onValueChange={v => setForm(f => ({ ...f, sector: v }))}>
                   <SelectTrigger
                     className="h-9 text-sm"
-                    style={{
-                      background: 'hsl(var(--secondary))',
-                      border: errors.sector ? '1px solid hsl(var(--destructive))' : '1px solid hsl(var(--border))',
-                    }}
+                    style={errors.sector ? errorInputStyle : inputStyle}
                   >
                     <SelectValue placeholder="Select sector" />
                   </SelectTrigger>
-                  <SelectContent style={{ background: 'hsl(var(--popover))', border: '1px solid hsl(var(--border))' }}>
+                  <SelectContent style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
                     {SECTORS.map(s => (
                       <SelectItem key={s} value={s} className="text-sm">{s}</SelectItem>
                     ))}
@@ -149,7 +156,7 @@ export const AddCompanyModal = ({ open, onClose, onAdd }) => {
                   onChange={e => setForm(f => ({ ...f, subsector: e.target.value }))}
                   placeholder="e.g. Payments"
                   className="pl-8 h-9 text-sm"
-                  style={{ background: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))' }}
+                  style={inputStyle}
                 />
               </div>
             </div>
@@ -165,14 +172,11 @@ export const AddCompanyModal = ({ open, onClose, onAdd }) => {
                 <Select value={form.category} onValueChange={v => setForm(f => ({ ...f, category: v }))}>
                   <SelectTrigger
                     className="h-9 text-sm"
-                    style={{
-                      background: 'hsl(var(--secondary))',
-                      border: errors.category ? '1px solid hsl(var(--destructive))' : '1px solid hsl(var(--border))',
-                    }}
+                    style={errors.category ? errorInputStyle : inputStyle}
                   >
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
-                  <SelectContent style={{ background: 'hsl(var(--popover))', border: '1px solid hsl(var(--border))' }}>
+                  <SelectContent style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
                     {CATEGORIES.map(c => (
                       <SelectItem key={c} value={c} className="text-sm">{c}</SelectItem>
                     ))}
@@ -188,13 +192,10 @@ export const AddCompanyModal = ({ open, onClose, onAdd }) => {
               </Label>
               <div className="mt-1">
                 <Select value={form.revenueRange} onValueChange={v => setForm(f => ({ ...f, revenueRange: v }))}>
-                  <SelectTrigger
-                    className="h-9 text-sm"
-                    style={{ background: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))' }}
-                  >
+                  <SelectTrigger className="h-9 text-sm" style={inputStyle}>
                     <SelectValue placeholder="Select range" />
                   </SelectTrigger>
-                  <SelectContent style={{ background: 'hsl(var(--popover))', border: '1px solid hsl(var(--border))' }}>
+                  <SelectContent style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
                     {revenueRanges.map(r => (
                       <SelectItem key={r} value={r} className="text-sm">{r}</SelectItem>
                     ))}
@@ -236,17 +237,13 @@ export const AddCompanyModal = ({ open, onClose, onAdd }) => {
             >
               Cancel
             </Button>
-            <Button
+            <button
               type="submit"
-              className="h-9 px-5 text-sm font-semibold"
-              style={{
-                background: 'hsl(var(--primary))',
-                color: 'hsl(var(--primary-foreground))',
-                border: 'none',
-              }}
+              className="btn-add-company"
+              style={{ padding: '6px 20px', borderRadius: '8px' }}
             >
               Add Company
-            </Button>
+            </button>
           </div>
         </form>
       </DialogContent>
