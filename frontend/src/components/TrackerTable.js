@@ -166,7 +166,7 @@ export const TrackerTable = () => {
   const filteredCompanies = useMemo(() => {
     return companies.filter((company) => {
       if (sectorFilter && company.sector !== sectorFilter) return false;
-      if (categoryFilter && company.category !== categoryFilter) return false;
+      if (categoryFilter && company.subsector !== categoryFilter) return false;
       if (revenueFilter && company.revenueRange !== revenueFilter) return false;
 
       const origIdx = initialCompanies.findIndex(ic => ic.id === company.id);
