@@ -568,14 +568,13 @@ export const TrackerTable = () => {
                     {/* Sector */}
                     <td className="tracker-cell col-frozen" style={{ ...frozenStyle, left: FROZEN_OFFSETS[2], minWidth: 172, width: 172 }}>
                       <SectorBadge sector={company.sector} />
-                      <div className="text-xs mt-1" style={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.68rem' }}>
-                        {company.subsector}
-                      </div>
                     </td>
 
-                    {/* Category (no sub-sector column, sub-sector shown below company sector) */}
+                    {/* Category (displays subsector value) */}
                     <td className="tracker-cell col-frozen col-frozen-last" style={{ ...frozenStyle, left: FROZEN_OFFSETS[3], minWidth: 138, width: 138 }}>
-                      <CategoryBadge category={company.category} />
+                      <span className="text-xs" style={{ color: 'hsl(var(--foreground))', fontSize: '0.72rem' }}>
+                        {company.subsector || 'N/A'}
+                      </span>
                     </td>
 
                     {/* Revenue Range */}
