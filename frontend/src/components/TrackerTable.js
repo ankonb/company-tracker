@@ -25,7 +25,7 @@ const fmtNum = (n) => {
   return String(n);
 };
 
-// Sector badge component
+// Sector badge
 const SectorBadge = ({ sector }) => {
   const cls = {
     Fintech: 'sector-fintech',
@@ -46,7 +46,7 @@ const CategoryBadge = ({ category }) => {
   return <span className={`sector-badge ${cls}`}>{category}</span>;
 };
 
-// Growth toggle component
+// Growth toggle
 const GrowthToggle = ({ active, onChange }) => (
   <div className="growth-toggle">
     {GROWTH_PERIODS.map(p => (
@@ -62,7 +62,7 @@ const GrowthToggle = ({ active, onChange }) => (
   </div>
 );
 
-// Metric cell component
+// Metric cell
 const MetricCell = ({ value, growth, positive }) => (
   <div>
     <div className="metric-value">{fmtNum(value)}</div>
@@ -73,7 +73,7 @@ const MetricCell = ({ value, growth, positive }) => (
   </div>
 );
 
-// BulletList cell
+// Bullet list cell
 const BulletListCell = ({ items }) => (
   <ul className="bullet-list">
     {items.map((item, i) => (
@@ -85,16 +85,46 @@ const BulletListCell = ({ items }) => (
   </ul>
 );
 
-// Frozen column left offsets (px)
-const FROZEN_OFFSETS = [0, 170, 314, 486, 636];
+// Min/Max dual filter row component
+const MinMaxFilter = ({ labelPrefix, minVal, maxVal, onMinChange, onMaxChange, placeholder }) => (
+  <div style={{ marginTop: 3 }}>
+    <span className="filter-label">{labelPrefix}</span>
+    <div style={{ display: 'flex', gap: 3 }}>
+      <input
+        className="numeric-filter"
+        style={{ width: '50%' }}
+        placeholder={`Min`}
+        value={minVal}
+        onChange={e => onMinChange(e.target.value)}
+        type="number"
+      />
+      <input
+        className="numeric-filter"
+        style={{ width: '50%' }}
+        placeholder={`Max`}
+        value={maxVal}
+        onChange={e => onMaxChange(e.target.value)}
+        type="number"
+      />
+    </div>
+  </div>
+);
 
-// Initial numeric filter state shape
+// Frozen column left offsets — 4 frozen cols (Sub-sector removed)
+// Company Name(170) | Website(144) | Sector(172) | Category(128)
+const FROZEN_OFFSETS = [0, 170, 314, 486];
+
+// Initial numeric filter state — min + max for value and growth %
 const INIT_NUMERIC = {
-  linkedinFollowers: { value: '', growth: '' },
-  linkedinHeadcount: { value: '', growth: '' },
-  linkedinJobs: { value: '', growth: '' },
-  webTraffic: { value: '', growth: '' },
+  linkedinFollowers: { valueMin: '', valueMax: '', growthMin: '', growthMax: '' },
+  linkedinHeadcount: { valueMin: '', valueMax: '', growthMin: '', growthMax: '' },
+  linkedinJobs:      { valueMin: '', valueMax: '', growthMin: '', growthMax: '' },
+  webTraffic:        { valueMin: '', valueMax: '', growthMin: '', growthMax: '' },
 };
+
+// Helper: check if a min/max range is active
+const rangeActive = (f) =>
+  f.valueMin !== '' || f.valueMax !== '' || f.growthMin !== '' || f.growthMax !== '';
 
 export const TrackerTable = () => {
   const [companies, setCompanies] = useState(initialCompanies);
@@ -107,84 +137,67 @@ export const TrackerTable = () => {
     webTraffic: 'YoY',
   });
 
-  // Column filters
   const [sectorFilter, setSectorFilter] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [revenueFilter, setRevenueFilter] = useState('');
-
-  // Monthly numeric + growth % filters
   const [numericFilters, setNumericFilters] = useState(INIT_NUMERIC);
 
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [hoveredRow, setHoveredRow] = useState(null);
 
-  // Update a numeric filter field
+  // Update a single field in the numeric filter for a column
   const setNumField = (col, field, val) =>
     setNumericFilters(prev => ({ ...prev, [col]: { ...prev[col], [field]: val } }));
 
-  // Check if any filter is active
   const hasActiveFilters =
     sectorFilter || categoryFilter || revenueFilter ||
-    Object.values(numericFilters).some(f => f.value !== '' || f.growth !== '');
+    Object.values(numericFilters).some(rangeActive);
 
-  // Get the original data index for a company (by id in initialCompanies)
   const getOriginalIdx = (company) =>
     initialCompanies.findIndex(ic => ic.id === company.id);
 
-  // Derived filtered companies
+  // Numeric range check helper
+  const passesRange = (val, min, max) => {
+    if (min !== '' && !isNaN(Number(min)) && val < Number(min)) return false;
+    if (max !== '' && !isNaN(Number(max)) && val > Number(max)) return false;
+    return true;
+  };
+
   const filteredCompanies = useMemo(() => {
     return companies.filter((company) => {
-      // --- Categorical filters ---
       if (sectorFilter && company.sector !== sectorFilter) return false;
       if (categoryFilter && company.category !== categoryFilter) return false;
       if (revenueFilter && company.revenueRange !== revenueFilter) return false;
 
-      // Get correct original index for data lookup
       const origIdx = initialCompanies.findIndex(ic => ic.id === company.id);
-      if (origIdx === -1) return true; // new company added by user — pass through
+      if (origIdx === -1) return true; // newly added company — pass through
 
       const mData = monthlyData[selectedMonth]?.[origIdx] || {};
-
-      // --- Monthly raw value filters ---
       const nf = numericFilters;
-      if (nf.linkedinFollowers.value !== '' && !isNaN(Number(nf.linkedinFollowers.value))) {
-        if ((mData.linkedinFollowers || 0) < Number(nf.linkedinFollowers.value)) return false;
-      }
-      if (nf.linkedinHeadcount.value !== '' && !isNaN(Number(nf.linkedinHeadcount.value))) {
-        if ((mData.linkedinHeadcount || 0) < Number(nf.linkedinHeadcount.value)) return false;
-      }
-      if (nf.linkedinJobs.value !== '' && !isNaN(Number(nf.linkedinJobs.value))) {
-        if ((mData.linkedinJobs || 0) < Number(nf.linkedinJobs.value)) return false;
-      }
-      if (nf.webTraffic.value !== '' && !isNaN(Number(nf.webTraffic.value))) {
-        if ((mData.webTraffic || 0) < Number(nf.webTraffic.value)) return false;
-      }
 
-      // --- Monthly growth % filters (uses per-column growth toggle period) ---
+      // LinkedIn Followers — value range
+      if (!passesRange(mData.linkedinFollowers || 0, nf.linkedinFollowers.valueMin, nf.linkedinFollowers.valueMax)) return false;
+      // LinkedIn Headcount — value range
+      if (!passesRange(mData.linkedinHeadcount || 0, nf.linkedinHeadcount.valueMin, nf.linkedinHeadcount.valueMax)) return false;
+      // LinkedIn Jobs — value range
+      if (!passesRange(mData.linkedinJobs || 0, nf.linkedinJobs.valueMin, nf.linkedinJobs.valueMax)) return false;
+      // Web Traffic — value range
+      if (!passesRange(mData.webTraffic || 0, nf.webTraffic.valueMin, nf.webTraffic.valueMax)) return false;
+
+      // Growth % ranges (per-column toggle period)
       const gFollowers = growthData[growthToggles.linkedinFollowers]?.[origIdx] || {};
       const gHeadcount = growthData[growthToggles.linkedinHeadcount]?.[origIdx] || {};
-      const gJobs = growthData[growthToggles.linkedinJobs]?.[origIdx] || {};
-      const gTraffic = growthData[growthToggles.webTraffic]?.[origIdx] || {};
+      const gJobs      = growthData[growthToggles.linkedinJobs]?.[origIdx] || {};
+      const gTraffic   = growthData[growthToggles.webTraffic]?.[origIdx] || {};
 
-      if (nf.linkedinFollowers.growth !== '' && !isNaN(Number(nf.linkedinFollowers.growth))) {
-        if ((gFollowers.linkedinFollowers || 0) < Number(nf.linkedinFollowers.growth)) return false;
-      }
-      if (nf.linkedinHeadcount.growth !== '' && !isNaN(Number(nf.linkedinHeadcount.growth))) {
-        if ((gHeadcount.linkedinHeadcount || 0) < Number(nf.linkedinHeadcount.growth)) return false;
-      }
-      if (nf.linkedinJobs.growth !== '' && !isNaN(Number(nf.linkedinJobs.growth))) {
-        if ((gJobs.linkedinJobs || 0) < Number(nf.linkedinJobs.growth)) return false;
-      }
-      if (nf.webTraffic.growth !== '' && !isNaN(Number(nf.webTraffic.growth))) {
-        if ((gTraffic.webTraffic || 0) < Number(nf.webTraffic.growth)) return false;
-      }
+      if (!passesRange(gFollowers.linkedinFollowers || 0, nf.linkedinFollowers.growthMin, nf.linkedinFollowers.growthMax)) return false;
+      if (!passesRange(gHeadcount.linkedinHeadcount || 0, nf.linkedinHeadcount.growthMin, nf.linkedinHeadcount.growthMax)) return false;
+      if (!passesRange(gJobs.linkedinJobs || 0, nf.linkedinJobs.growthMin, nf.linkedinJobs.growthMax)) return false;
+      if (!passesRange(gTraffic.webTraffic || 0, nf.webTraffic.growthMin, nf.webTraffic.growthMax)) return false;
 
       return true;
     });
-  }, [
-    companies, sectorFilter, categoryFilter, revenueFilter,
-    numericFilters, selectedMonth, growthToggles,
-  ]);
+  }, [companies, sectorFilter, categoryFilter, revenueFilter, numericFilters, selectedMonth, growthToggles]);
 
   const handleAddCompany = (newCompany) => {
     setCompanies(prev => [...prev, newCompany]);
@@ -200,21 +213,15 @@ export const TrackerTable = () => {
   const qData = quarterlyData[selectedQuarter];
 
   return (
-    <div
-      className="flex flex-col"
-      style={{ height: '100vh', background: 'hsl(var(--background))' }}
-    >
+    <div className="flex flex-col" style={{ height: '100vh', background: 'hsl(var(--background))' }}>
       <DashboardHeader companyCount={companies.length} onRefresh={() => {}} />
 
       {/* Toolbar */}
       <div
         className="flex items-center justify-between px-6 py-2.5 flex-shrink-0"
-        style={{
-          background: 'hsl(var(--card))',
-          borderBottom: '1px solid hsl(var(--border))',
-        }}
+        style={{ background: 'hsl(var(--card))', borderBottom: '1px solid hsl(var(--border))' }}
       >
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <Filter size={13} style={{ color: 'hsl(var(--muted-foreground))' }} />
           <span className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>
             Showing{' '}
@@ -223,6 +230,7 @@ export const TrackerTable = () => {
             </span>{' '}
             of {companies.length} companies
           </span>
+
           {hasActiveFilters && (
             <button
               className="text-xs px-2 py-0.5 rounded-md flex items-center gap-1"
@@ -238,7 +246,7 @@ export const TrackerTable = () => {
               Clear all filters
             </button>
           )}
-          {/* Active filter pills */}
+
           {sectorFilter && (
             <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: 'hsl(210 80% 95%)', color: 'hsl(210 80% 35%)', border: '1px solid hsl(210 80% 80%)' }}>
               Sector: {sectorFilter}
@@ -256,32 +264,26 @@ export const TrackerTable = () => {
           )}
         </div>
 
-        <button
-          className="btn-add-company"
-          onClick={() => setAddModalOpen(true)}
-        >
+        <button className="btn-add-company" onClick={() => setAddModalOpen(true)}>
           <Plus size={13} />
           Add Company
         </button>
       </div>
 
-      {/* Table wrapper */}
+      {/* Table */}
       <div className="tracker-table-wrapper flex-1" style={{ margin: '12px 16px' }}>
         <table className="tracker-table">
-          {/* ============ THEAD ============ */}
           <thead>
-            {/* Row 1: Column Groups */}
+            {/* ── Group header row ── */}
             <tr>
-              {/* Frozen group header */}
               <th
-                colSpan={5}
+                colSpan={4}
                 className="tracker-th group-header col-frozen"
-                style={{ left: 0, zIndex: 31, minWidth: 774 }}
+                style={{ left: 0, zIndex: 31, minWidth: 624 }}
               >
                 <span style={{ color: 'hsl(var(--muted-foreground))' }}>Company Details</span>
               </th>
 
-              {/* Annual Data */}
               <th
                 colSpan={1}
                 className="tracker-th group-header"
@@ -290,7 +292,6 @@ export const TrackerTable = () => {
                 <span style={{ color: 'hsl(210 80% 45%)' }}>Annual Data</span>
               </th>
 
-              {/* Company Offerings */}
               <th
                 colSpan={1}
                 className="tracker-th group-header"
@@ -299,7 +300,6 @@ export const TrackerTable = () => {
                 <span style={{ color: 'hsl(280 60% 45%)' }}>Company Offerings</span>
               </th>
 
-              {/* Quarterly Data */}
               <th
                 colSpan={5}
                 className="tracker-th group-header"
@@ -307,66 +307,47 @@ export const TrackerTable = () => {
               >
                 <div className="flex items-center gap-2">
                   <span style={{ color: 'hsl(38 80% 40%)' }}>Quarterly Data</span>
-                  <select
-                    className="period-selector"
-                    value={selectedQuarter}
-                    onChange={e => setSelectedQuarter(e.target.value)}
-                  >
+                  <select className="period-selector" value={selectedQuarter} onChange={e => setSelectedQuarter(e.target.value)}>
                     {QUARTERS.map(q => <option key={q} value={q}>{q}</option>)}
                   </select>
                 </div>
               </th>
 
-              {/* Monthly Data */}
               <th
                 colSpan={4}
                 className="tracker-th group-header"
-                style={{ minWidth: 620, borderLeft: '2px solid hsl(var(--border))' }}
+                style={{ minWidth: 660, borderLeft: '2px solid hsl(var(--border))' }}
               >
                 <div className="flex items-center gap-2">
                   <span style={{ color: 'hsl(150 83% 32%)' }}>Monthly Data</span>
-                  <select
-                    className="period-selector"
-                    value={selectedMonth}
-                    onChange={e => setSelectedMonth(e.target.value)}
-                  >
+                  <select className="period-selector" value={selectedMonth} onChange={e => setSelectedMonth(e.target.value)}>
                     {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
                   </select>
                 </div>
               </th>
             </tr>
 
-            {/* Row 2: Column headers */}
+            {/* ── Column header row ── */}
             <tr>
-              {/* === FROZEN COLUMNS === */}
-              {/* Company Name */}
-              <th
-                className="tracker-th col-frozen"
-                style={{ left: FROZEN_OFFSETS[0], minWidth: 170, width: 170 }}
-              >
+              {/* FROZEN: Company Name */}
+              <th className="tracker-th col-frozen" style={{ left: FROZEN_OFFSETS[0], minWidth: 170, width: 170 }}>
                 Company Name
               </th>
 
-              {/* Website */}
-              <th
-                className="tracker-th col-frozen"
-                style={{ left: FROZEN_OFFSETS[1], minWidth: 144, width: 144 }}
-              >
+              {/* FROZEN: Website */}
+              <th className="tracker-th col-frozen" style={{ left: FROZEN_OFFSETS[1], minWidth: 144, width: 144 }}>
                 Website
               </th>
 
-              {/* Sector with filter */}
-              <th
-                className="tracker-th col-frozen"
-                style={{ left: FROZEN_OFFSETS[2], minWidth: 172, width: 172 }}
-              >
+              {/* FROZEN: Sector */}
+              <th className="tracker-th col-frozen" style={{ left: FROZEN_OFFSETS[2], minWidth: 172, width: 172 }}>
                 <div className="flex items-center gap-1">
                   Sector
                   {sectorFilter && <span className="filter-active-dot" />}
                 </div>
                 <div className="relative">
                   <select
-                    className="header-filter-select pr-5"
+                    className="header-filter-select"
                     value={sectorFilter}
                     onChange={e => setSectorFilter(e.target.value)}
                     style={{ paddingRight: '20px' }}
@@ -378,26 +359,15 @@ export const TrackerTable = () => {
                 </div>
               </th>
 
-              {/* Sub-sector */}
-              <th
-                className="tracker-th col-frozen"
-                style={{ left: FROZEN_OFFSETS[3], minWidth: 150, width: 150 }}
-              >
-                Sub-sector
-              </th>
-
-              {/* Category with filter */}
-              <th
-                className="tracker-th col-frozen col-frozen-last"
-                style={{ left: FROZEN_OFFSETS[4], minWidth: 128, width: 128 }}
-              >
+              {/* FROZEN: Category */}
+              <th className="tracker-th col-frozen col-frozen-last" style={{ left: FROZEN_OFFSETS[3], minWidth: 138, width: 138 }}>
                 <div className="flex items-center gap-1">
                   Category
                   {categoryFilter && <span className="filter-active-dot" />}
                 </div>
                 <div className="relative">
                   <select
-                    className="header-filter-select pr-5"
+                    className="header-filter-select"
                     value={categoryFilter}
                     onChange={e => setCategoryFilter(e.target.value)}
                     style={{ paddingRight: '20px' }}
@@ -409,18 +379,15 @@ export const TrackerTable = () => {
                 </div>
               </th>
 
-              {/* === ANNUAL DATA: Revenue Range with filter === */}
-              <th
-                className="tracker-th"
-                style={{ minWidth: 140, borderLeft: '2px solid hsl(var(--border))' }}
-              >
+              {/* Revenue Range with filter */}
+              <th className="tracker-th" style={{ minWidth: 140, borderLeft: '2px solid hsl(var(--border))' }}>
                 <div className="flex items-center gap-1">
                   Revenue Range
                   {revenueFilter && <span className="filter-active-dot" />}
                 </div>
                 <div className="relative">
                   <select
-                    className="header-filter-select pr-5"
+                    className="header-filter-select"
                     value={revenueFilter}
                     onChange={e => setRevenueFilter(e.target.value)}
                     style={{ paddingRight: '20px' }}
@@ -432,150 +399,117 @@ export const TrackerTable = () => {
                 </div>
               </th>
 
-              {/* === COMPANY OFFERINGS === */}
-              <th
-                className="tracker-th"
-                style={{ minWidth: 260, borderLeft: '2px solid hsl(var(--border))' }}
-              >
+              {/* Offerings Summary */}
+              <th className="tracker-th" style={{ minWidth: 260, borderLeft: '2px solid hsl(var(--border))' }}>
                 Offerings Summary
               </th>
 
-              {/* === QUARTERLY SUB-COLUMNS === */}
+              {/* Quarterly sub-columns */}
               <th className="tracker-th" style={{ minWidth: 166, borderLeft: '2px solid hsl(var(--border))' }}>News Highlights</th>
               <th className="tracker-th" style={{ minWidth: 166 }}>New Customer Wins</th>
               <th className="tracker-th" style={{ minWidth: 166 }}>New Partnerships</th>
               <th className="tracker-th" style={{ minWidth: 166 }}>CXO Changes</th>
               <th className="tracker-th" style={{ minWidth: 166 }}>New Products &amp; Launches</th>
 
-              {/* === MONTHLY SUB-COLUMNS === */}
-              {/* LinkedIn Followers */}
-              <th className="tracker-th" style={{ minWidth: 155, borderLeft: '2px solid hsl(var(--border))' }}>
+              {/* Monthly: LinkedIn Followers */}
+              <th className="tracker-th" style={{ minWidth: 165, borderLeft: '2px solid hsl(var(--border))' }}>
                 <div className="flex items-center gap-1">
                   LinkedIn Followers
-                  {(numericFilters.linkedinFollowers.value || numericFilters.linkedinFollowers.growth) && (
-                    <span className="filter-active-dot" />
-                  )}
+                  {rangeActive(numericFilters.linkedinFollowers) && <span className="filter-active-dot" />}
                 </div>
-                <GrowthToggle
-                  active={growthToggles.linkedinFollowers}
-                  onChange={v => setGrowthToggles(g => ({ ...g, linkedinFollowers: v }))}
+                <GrowthToggle active={growthToggles.linkedinFollowers} onChange={v => setGrowthToggles(g => ({ ...g, linkedinFollowers: v }))} />
+                <MinMaxFilter
+                  labelPrefix="Value"
+                  minVal={numericFilters.linkedinFollowers.valueMin}
+                  maxVal={numericFilters.linkedinFollowers.valueMax}
+                  onMinChange={v => setNumField('linkedinFollowers', 'valueMin', v)}
+                  onMaxChange={v => setNumField('linkedinFollowers', 'valueMax', v)}
                 />
-                <span className="filter-label">Value &gt; min</span>
-                <input
-                  className="numeric-filter"
-                  placeholder="e.g. 50000"
-                  value={numericFilters.linkedinFollowers.value}
-                  onChange={e => setNumField('linkedinFollowers', 'value', e.target.value)}
-                  type="number"
-                />
-                <span className="filter-label">Growth % &gt; min</span>
-                <input
-                  className="numeric-filter"
-                  placeholder="e.g. 20"
-                  value={numericFilters.linkedinFollowers.growth}
-                  onChange={e => setNumField('linkedinFollowers', 'growth', e.target.value)}
-                  type="number"
+                <MinMaxFilter
+                  labelPrefix="Growth %"
+                  minVal={numericFilters.linkedinFollowers.growthMin}
+                  maxVal={numericFilters.linkedinFollowers.growthMax}
+                  onMinChange={v => setNumField('linkedinFollowers', 'growthMin', v)}
+                  onMaxChange={v => setNumField('linkedinFollowers', 'growthMax', v)}
                 />
               </th>
 
-              {/* LinkedIn Headcount */}
-              <th className="tracker-th" style={{ minWidth: 155 }}>
+              {/* Monthly: LinkedIn Headcount */}
+              <th className="tracker-th" style={{ minWidth: 165 }}>
                 <div className="flex items-center gap-1">
                   LinkedIn Headcount
-                  {(numericFilters.linkedinHeadcount.value || numericFilters.linkedinHeadcount.growth) && (
-                    <span className="filter-active-dot" />
-                  )}
+                  {rangeActive(numericFilters.linkedinHeadcount) && <span className="filter-active-dot" />}
                 </div>
-                <GrowthToggle
-                  active={growthToggles.linkedinHeadcount}
-                  onChange={v => setGrowthToggles(g => ({ ...g, linkedinHeadcount: v }))}
+                <GrowthToggle active={growthToggles.linkedinHeadcount} onChange={v => setGrowthToggles(g => ({ ...g, linkedinHeadcount: v }))} />
+                <MinMaxFilter
+                  labelPrefix="Value"
+                  minVal={numericFilters.linkedinHeadcount.valueMin}
+                  maxVal={numericFilters.linkedinHeadcount.valueMax}
+                  onMinChange={v => setNumField('linkedinHeadcount', 'valueMin', v)}
+                  onMaxChange={v => setNumField('linkedinHeadcount', 'valueMax', v)}
                 />
-                <span className="filter-label">Value &gt; min</span>
-                <input
-                  className="numeric-filter"
-                  placeholder="e.g. 500"
-                  value={numericFilters.linkedinHeadcount.value}
-                  onChange={e => setNumField('linkedinHeadcount', 'value', e.target.value)}
-                  type="number"
-                />
-                <span className="filter-label">Growth % &gt; min</span>
-                <input
-                  className="numeric-filter"
-                  placeholder="e.g. 40"
-                  value={numericFilters.linkedinHeadcount.growth}
-                  onChange={e => setNumField('linkedinHeadcount', 'growth', e.target.value)}
-                  type="number"
+                <MinMaxFilter
+                  labelPrefix="Growth %"
+                  minVal={numericFilters.linkedinHeadcount.growthMin}
+                  maxVal={numericFilters.linkedinHeadcount.growthMax}
+                  onMinChange={v => setNumField('linkedinHeadcount', 'growthMin', v)}
+                  onMaxChange={v => setNumField('linkedinHeadcount', 'growthMax', v)}
                 />
               </th>
 
-              {/* LinkedIn Job Openings */}
-              <th className="tracker-th" style={{ minWidth: 155 }}>
+              {/* Monthly: LinkedIn Job Openings */}
+              <th className="tracker-th" style={{ minWidth: 165 }}>
                 <div className="flex items-center gap-1">
                   LinkedIn Job Openings
-                  {(numericFilters.linkedinJobs.value || numericFilters.linkedinJobs.growth) && (
-                    <span className="filter-active-dot" />
-                  )}
+                  {rangeActive(numericFilters.linkedinJobs) && <span className="filter-active-dot" />}
                 </div>
-                <GrowthToggle
-                  active={growthToggles.linkedinJobs}
-                  onChange={v => setGrowthToggles(g => ({ ...g, linkedinJobs: v }))}
+                <GrowthToggle active={growthToggles.linkedinJobs} onChange={v => setGrowthToggles(g => ({ ...g, linkedinJobs: v }))} />
+                <MinMaxFilter
+                  labelPrefix="Value"
+                  minVal={numericFilters.linkedinJobs.valueMin}
+                  maxVal={numericFilters.linkedinJobs.valueMax}
+                  onMinChange={v => setNumField('linkedinJobs', 'valueMin', v)}
+                  onMaxChange={v => setNumField('linkedinJobs', 'valueMax', v)}
                 />
-                <span className="filter-label">Value &gt; min</span>
-                <input
-                  className="numeric-filter"
-                  placeholder="e.g. 50"
-                  value={numericFilters.linkedinJobs.value}
-                  onChange={e => setNumField('linkedinJobs', 'value', e.target.value)}
-                  type="number"
-                />
-                <span className="filter-label">Growth % &gt; min</span>
-                <input
-                  className="numeric-filter"
-                  placeholder="e.g. 80"
-                  value={numericFilters.linkedinJobs.growth}
-                  onChange={e => setNumField('linkedinJobs', 'growth', e.target.value)}
-                  type="number"
+                <MinMaxFilter
+                  labelPrefix="Growth %"
+                  minVal={numericFilters.linkedinJobs.growthMin}
+                  maxVal={numericFilters.linkedinJobs.growthMax}
+                  onMinChange={v => setNumField('linkedinJobs', 'growthMin', v)}
+                  onMaxChange={v => setNumField('linkedinJobs', 'growthMax', v)}
                 />
               </th>
 
-              {/* Web Traffic */}
-              <th className="tracker-th" style={{ minWidth: 155 }}>
+              {/* Monthly: Web Traffic */}
+              <th className="tracker-th" style={{ minWidth: 165 }}>
                 <div className="flex items-center gap-1">
                   Web Traffic
-                  {(numericFilters.webTraffic.value || numericFilters.webTraffic.growth) && (
-                    <span className="filter-active-dot" />
-                  )}
+                  {rangeActive(numericFilters.webTraffic) && <span className="filter-active-dot" />}
                 </div>
-                <GrowthToggle
-                  active={growthToggles.webTraffic}
-                  onChange={v => setGrowthToggles(g => ({ ...g, webTraffic: v }))}
+                <GrowthToggle active={growthToggles.webTraffic} onChange={v => setGrowthToggles(g => ({ ...g, webTraffic: v }))} />
+                <MinMaxFilter
+                  labelPrefix="Value"
+                  minVal={numericFilters.webTraffic.valueMin}
+                  maxVal={numericFilters.webTraffic.valueMax}
+                  onMinChange={v => setNumField('webTraffic', 'valueMin', v)}
+                  onMaxChange={v => setNumField('webTraffic', 'valueMax', v)}
                 />
-                <span className="filter-label">Value &gt; min</span>
-                <input
-                  className="numeric-filter"
-                  placeholder="e.g. 1000000"
-                  value={numericFilters.webTraffic.value}
-                  onChange={e => setNumField('webTraffic', 'value', e.target.value)}
-                  type="number"
-                />
-                <span className="filter-label">Growth % &gt; min</span>
-                <input
-                  className="numeric-filter"
-                  placeholder="e.g. 60"
-                  value={numericFilters.webTraffic.growth}
-                  onChange={e => setNumField('webTraffic', 'growth', e.target.value)}
-                  type="number"
+                <MinMaxFilter
+                  labelPrefix="Growth %"
+                  minVal={numericFilters.webTraffic.growthMin}
+                  maxVal={numericFilters.webTraffic.growthMax}
+                  onMinChange={v => setNumField('webTraffic', 'growthMin', v)}
+                  onMaxChange={v => setNumField('webTraffic', 'growthMax', v)}
                 />
               </th>
             </tr>
           </thead>
 
-          {/* ============ TBODY ============ */}
           <tbody>
             {filteredCompanies.length === 0 ? (
               <tr>
                 <td
-                  colSpan={16}
+                  colSpan={15}
                   className="tracker-cell text-center py-12"
                   style={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.85rem' }}
                 >
@@ -591,34 +525,25 @@ export const TrackerTable = () => {
             ) : (
               filteredCompanies.map((company, rowIdx) => {
                 const origIdx = getOriginalIdx(company);
-
-                // Use origIdx for data; if origIdx is -1 (new company), use 0 as fallback
                 const dataIdx = origIdx >= 0 ? origIdx : 0;
 
-                const mData = monthlyData[selectedMonth]?.[dataIdx] || {};
-                const gDataFollowers = growthData[growthToggles.linkedinFollowers]?.[dataIdx] || {};
-                const gDataHeadcount = growthData[growthToggles.linkedinHeadcount]?.[dataIdx] || {};
-                const gDataJobs = growthData[growthToggles.linkedinJobs]?.[dataIdx] || {};
-                const gDataTraffic = growthData[growthToggles.webTraffic]?.[dataIdx] || {};
+                const mData       = monthlyData[selectedMonth]?.[dataIdx] || {};
+                const gFollowers  = growthData[growthToggles.linkedinFollowers]?.[dataIdx] || {};
+                const gHeadcount  = growthData[growthToggles.linkedinHeadcount]?.[dataIdx] || {};
+                const gJobs       = growthData[growthToggles.linkedinJobs]?.[dataIdx] || {};
+                const gTraffic    = growthData[growthToggles.webTraffic]?.[dataIdx] || {};
 
-                const newsItems = qData?.newsHighlights?.[dataIdx] || ['No data available', 'No data available', 'No data available'];
-                const custItems = qData?.customerWins?.[dataIdx] || ['No data available', 'No data available', 'No data available'];
-                const partItems = qData?.partnerships?.[dataIdx] || ['No data available', 'No data available', 'No data available'];
-                const cxoItems = qData?.cxoChanges?.[dataIdx] || ['No data available', 'No data available', 'No data available'];
-                const prodItems = qData?.newProducts?.[dataIdx] || ['No data available', 'No data available', 'No data available'];
+                const newsItems = qData?.newsHighlights?.[dataIdx] || ['No data', 'No data', 'No data'];
+                const custItems = qData?.customerWins?.[dataIdx]   || ['No data', 'No data', 'No data'];
+                const partItems = qData?.partnerships?.[dataIdx]   || ['No data', 'No data', 'No data'];
+                const cxoItems  = qData?.cxoChanges?.[dataIdx]     || ['No data', 'No data', 'No data'];
+                const prodItems = qData?.newProducts?.[dataIdx]    || ['No data', 'No data', 'No data'];
 
                 const isHovered = hoveredRow === company.id;
-
                 const frozenBg = isHovered
                   ? 'hsl(var(--table-row-hover))'
-                  : rowIdx % 2 === 1
-                  ? 'hsl(var(--table-row-alt))'
-                  : 'hsl(var(--table-row-bg))';
-
-                const frozenCellStyle = {
-                  background: frozenBg,
-                  transition: 'background-color 0.15s ease',
-                };
+                  : rowIdx % 2 === 1 ? 'hsl(var(--table-row-alt))' : 'hsl(var(--table-row-bg))';
+                const frozenStyle = { background: frozenBg, transition: 'background-color 0.15s ease' };
 
                 return (
                   <tr
@@ -628,139 +553,70 @@ export const TrackerTable = () => {
                     onMouseLeave={() => setHoveredRow(null)}
                   >
                     {/* Company Name */}
-                    <td
-                      className="tracker-cell col-frozen"
-                      style={{ ...frozenCellStyle, left: FROZEN_OFFSETS[0], minWidth: 170, width: 170 }}
-                    >
+                    <td className="tracker-cell col-frozen" style={{ ...frozenStyle, left: FROZEN_OFFSETS[0], minWidth: 170, width: 170 }}>
                       <div className="company-name">{company.name}</div>
                     </td>
 
                     {/* Website */}
-                    <td
-                      className="tracker-cell col-frozen"
-                      style={{ ...frozenCellStyle, left: FROZEN_OFFSETS[1], minWidth: 144, width: 144 }}
-                    >
-                      <a
-                        href={company.website}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="company-link"
-                      >
+                    <td className="tracker-cell col-frozen" style={{ ...frozenStyle, left: FROZEN_OFFSETS[1], minWidth: 144, width: 144 }}>
+                      <a href={company.website} target="_blank" rel="noopener noreferrer" className="company-link">
                         <ExternalLink size={10} />
                         {company.website.replace('https://', '')}
                       </a>
                     </td>
 
                     {/* Sector */}
-                    <td
-                      className="tracker-cell col-frozen"
-                      style={{ ...frozenCellStyle, left: FROZEN_OFFSETS[2], minWidth: 172, width: 172 }}
-                    >
+                    <td className="tracker-cell col-frozen" style={{ ...frozenStyle, left: FROZEN_OFFSETS[2], minWidth: 172, width: 172 }}>
                       <SectorBadge sector={company.sector} />
-                    </td>
-
-                    {/* Sub-sector */}
-                    <td
-                      className="tracker-cell col-frozen"
-                      style={{ ...frozenCellStyle, left: FROZEN_OFFSETS[3], minWidth: 150, width: 150 }}
-                    >
-                      <span
-                        className="text-xs"
-                        style={{ color: 'hsl(var(--foreground) / 0.7)', fontSize: '0.75rem' }}
-                      >
+                      <div className="text-xs mt-1" style={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.68rem' }}>
                         {company.subsector}
-                      </span>
+                      </div>
                     </td>
 
-                    {/* Category */}
-                    <td
-                      className="tracker-cell col-frozen col-frozen-last"
-                      style={{ ...frozenCellStyle, left: FROZEN_OFFSETS[4], minWidth: 128, width: 128 }}
-                    >
+                    {/* Category (no sub-sector column, sub-sector shown below company sector) */}
+                    <td className="tracker-cell col-frozen col-frozen-last" style={{ ...frozenStyle, left: FROZEN_OFFSETS[3], minWidth: 138, width: 138 }}>
                       <CategoryBadge category={company.category} />
                     </td>
 
                     {/* Revenue Range */}
-                    <td
-                      className="tracker-cell"
-                      style={{ borderLeft: '2px solid hsl(var(--border))', minWidth: 140 }}
-                    >
+                    <td className="tracker-cell" style={{ borderLeft: '2px solid hsl(var(--border))', minWidth: 140 }}>
                       <span className="revenue-badge">{company.revenueRange || 'N/A'}</span>
                     </td>
 
                     {/* Offerings Summary */}
-                    <td
-                      className="tracker-cell"
-                      style={{ borderLeft: '2px solid hsl(var(--border))', minWidth: 260, maxWidth: 260 }}
-                    >
+                    <td className="tracker-cell" style={{ borderLeft: '2px solid hsl(var(--border))', minWidth: 260, maxWidth: 260 }}>
                       <p className="offerings-text">{company.offeringsSummary}</p>
                     </td>
 
-                    {/* Quarterly: News Highlights */}
-                    <td
-                      className="tracker-cell"
-                      style={{ borderLeft: '2px solid hsl(var(--border))', minWidth: 166 }}
-                    >
+                    {/* Quarterly */}
+                    <td className="tracker-cell" style={{ borderLeft: '2px solid hsl(var(--border))', minWidth: 166 }}>
                       <BulletListCell items={newsItems} />
                     </td>
-
-                    {/* Quarterly: Customer Wins */}
                     <td className="tracker-cell" style={{ minWidth: 166 }}>
                       <BulletListCell items={custItems} />
                     </td>
-
-                    {/* Quarterly: Partnerships */}
                     <td className="tracker-cell" style={{ minWidth: 166 }}>
                       <BulletListCell items={partItems} />
                     </td>
-
-                    {/* Quarterly: CXO Changes */}
                     <td className="tracker-cell" style={{ minWidth: 166 }}>
                       <BulletListCell items={cxoItems} />
                     </td>
-
-                    {/* Quarterly: New Products */}
                     <td className="tracker-cell" style={{ minWidth: 166 }}>
                       <BulletListCell items={prodItems} />
                     </td>
 
-                    {/* Monthly: LinkedIn Followers */}
-                    <td
-                      className="tracker-cell"
-                      style={{ borderLeft: '2px solid hsl(var(--border))', minWidth: 155 }}
-                    >
-                      <MetricCell
-                        value={mData.linkedinFollowers || 0}
-                        growth={gDataFollowers.linkedinFollowers || 0}
-                        positive={(gDataFollowers.linkedinFollowers || 0) >= 0}
-                      />
+                    {/* Monthly */}
+                    <td className="tracker-cell" style={{ borderLeft: '2px solid hsl(var(--border))', minWidth: 165 }}>
+                      <MetricCell value={mData.linkedinFollowers || 0} growth={gFollowers.linkedinFollowers || 0} positive={(gFollowers.linkedinFollowers || 0) >= 0} />
                     </td>
-
-                    {/* Monthly: LinkedIn Headcount */}
-                    <td className="tracker-cell" style={{ minWidth: 155 }}>
-                      <MetricCell
-                        value={mData.linkedinHeadcount || 0}
-                        growth={gDataHeadcount.linkedinHeadcount || 0}
-                        positive={(gDataHeadcount.linkedinHeadcount || 0) >= 0}
-                      />
+                    <td className="tracker-cell" style={{ minWidth: 165 }}>
+                      <MetricCell value={mData.linkedinHeadcount || 0} growth={gHeadcount.linkedinHeadcount || 0} positive={(gHeadcount.linkedinHeadcount || 0) >= 0} />
                     </td>
-
-                    {/* Monthly: LinkedIn Job Openings */}
-                    <td className="tracker-cell" style={{ minWidth: 155 }}>
-                      <MetricCell
-                        value={mData.linkedinJobs || 0}
-                        growth={gDataJobs.linkedinJobs || 0}
-                        positive={(gDataJobs.linkedinJobs || 0) >= 0}
-                      />
+                    <td className="tracker-cell" style={{ minWidth: 165 }}>
+                      <MetricCell value={mData.linkedinJobs || 0} growth={gJobs.linkedinJobs || 0} positive={(gJobs.linkedinJobs || 0) >= 0} />
                     </td>
-
-                    {/* Monthly: Web Traffic */}
-                    <td className="tracker-cell" style={{ minWidth: 155 }}>
-                      <MetricCell
-                        value={mData.webTraffic || 0}
-                        growth={gDataTraffic.webTraffic || 0}
-                        positive={(gDataTraffic.webTraffic || 0) >= 0}
-                      />
+                    <td className="tracker-cell" style={{ minWidth: 165 }}>
+                      <MetricCell value={mData.webTraffic || 0} growth={gTraffic.webTraffic || 0} positive={(gTraffic.webTraffic || 0) >= 0} />
                     </td>
                   </tr>
                 );
@@ -770,7 +626,6 @@ export const TrackerTable = () => {
         </table>
       </div>
 
-      {/* Add Company Modal */}
       <AddCompanyModal
         open={addModalOpen}
         onClose={() => setAddModalOpen(false)}
