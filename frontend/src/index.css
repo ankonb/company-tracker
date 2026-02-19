@@ -6,6 +6,544 @@
 
 @layer base {
   :root {
+    /* === GROWTH EQUITY FUND TRACKER - LIGHT PROFESSIONAL DESIGN SYSTEM === */
+    /* Inspired by the platform screenshot: white/light-gray bg + teal-green accent */
+
+    /* Light Gray Background */
+    --background: 220 20% 97%;
+    --foreground: 220 15% 13%;
+
+    /* Surface layers */
+    --card: 0 0% 100%;
+    --card-foreground: 220 15% 13%;
+    --card-elevated: 220 20% 98%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 15% 13%;
+
+    /* Brand - Teal Green (matching platform accent #00C853 / #1DB987) */
+    --primary: 150 83% 38%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 150 83% 48%;
+    --primary-dim: 150 60% 92%;
+    --primary-soft: 150 60% 95%;
+
+    /* Secondary surface */
+    --secondary: 220 14% 95%;
+    --secondary-foreground: 220 15% 25%;
+
+    /* Muted elements */
+    --muted: 220 15% 96%;
+    --muted-foreground: 220 8% 50%;
+
+    /* Accent */
+    --accent: 150 83% 38%;
+    --accent-foreground: 0 0% 100%;
+
+    /* State colors */
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
+    --success: 150 83% 38%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 220 15% 13%;
+
+    /* Borders & Inputs */
+    --border: 220 13% 89%;
+    --border-subtle: 220 13% 93%;
+    --input: 220 14% 96%;
+    --ring: 150 83% 38%;
+
+    /* Chart colors */
+    --chart-1: 150 83% 38%;
+    --chart-2: 210 75% 50%;
+    --chart-3: 38 92% 50%;
+    --chart-4: 280 60% 55%;
+    --chart-5: 10 85% 55%;
+
+    --radius: 0.5rem;
+
+    /* Table specific - light theme */
+    --table-header-bg: 220 20% 97%;
+    --table-row-bg: 0 0% 100%;
+    --table-row-alt: 220 20% 98%;
+    --table-row-hover: 150 60% 97%;
+    --table-frozen-bg: 0 0% 100%;
+    --table-group-header: 220 20% 97%;
+
+    /* Shadows */
+    --shadow-sm: 0 1px 3px hsl(220 15% 60% / 0.12);
+    --shadow-md: 0 4px 12px hsl(220 15% 60% / 0.15);
+    --shadow-glow: 0 0 20px hsl(150 83% 38% / 0.12);
+    --shadow-frozen: 4px 0 12px hsl(220 15% 60% / 0.10);
+
+    /* Transitions */
+    --transition-fast: 0.15s ease;
+    --transition-smooth: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+    box-sizing: border-box;
+  }
+
+  html {
+    color-scheme: light;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  code, .font-mono {
+    font-family: 'IBM Plex Mono', monospace;
+  }
+}
+
+@layer components {
+  /* === TABLE CORE STYLES === */
+  .tracker-table-wrapper {
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: calc(100vh - 180px);
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    background: hsl(var(--table-row-bg));
+    position: relative;
+    scroll-behavior: smooth;
+    box-shadow: var(--shadow-md);
+  }
+
+  .tracker-table-wrapper::-webkit-scrollbar {
+    height: 8px;
+    width: 8px;
+  }
+
+  .tracker-table-wrapper::-webkit-scrollbar-track {
+    background: hsl(var(--table-header-bg));
+  }
+
+  .tracker-table-wrapper::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 4px;
+  }
+
+  .tracker-table-wrapper::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.5);
+  }
+
+  .tracker-table {
+    border-collapse: separate;
+    border-spacing: 0;
+    width: max-content;
+    min-width: 100%;
+    table-layout: fixed;
+  }
+
+  /* Frozen column sticky behavior */
+  .col-frozen {
+    position: sticky;
+    z-index: 20;
+    background: hsl(var(--table-frozen-bg));
+  }
+
+  .col-frozen::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: -1px;
+    bottom: 0;
+    width: 1px;
+    background: hsl(var(--border));
+  }
+
+  .col-frozen-last::after {
+    box-shadow: 4px 0 10px hsl(220 15% 60% / 0.12);
+    width: 2px;
+    background: hsl(var(--primary) / 0.25);
+  }
+
+  /* Group header styling */
+  .group-header {
+    background: hsl(var(--table-group-header));
+    border-bottom: 1px solid hsl(var(--border));
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: hsl(var(--muted-foreground));
+  }
+
+  /* Cell styles */
+  .tracker-cell {
+    padding: 10px 12px;
+    border-bottom: 1px solid hsl(var(--border-subtle));
+    border-right: 1px solid hsl(var(--border-subtle));
+    vertical-align: top;
+    transition: background-color var(--transition-fast);
+  }
+
+  .tracker-th {
+    padding: 8px 12px;
+    border-bottom: 1px solid hsl(var(--border));
+    border-right: 1px solid hsl(var(--border-subtle));
+    background: hsl(var(--table-header-bg));
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: hsl(var(--muted-foreground));
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    vertical-align: top;
+  }
+
+  .tracker-th.col-frozen {
+    z-index: 30;
+    background: hsl(var(--table-header-bg));
+  }
+
+  .tracker-row:hover .tracker-cell {
+    background: hsl(var(--table-row-hover));
+  }
+
+  .tracker-row:hover .col-frozen {
+    background: hsl(var(--table-row-hover)) !important;
+  }
+
+  .tracker-row:nth-child(even) .tracker-cell {
+    background: hsl(var(--table-row-alt));
+  }
+
+  .tracker-row:nth-child(even) .col-frozen {
+    background: hsl(var(--table-row-alt));
+  }
+
+  /* Bullet point cell */
+  .bullet-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .bullet-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    font-size: 0.72rem;
+    line-height: 1.4;
+    color: hsl(var(--foreground) / 0.75);
+  }
+
+  .bullet-dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: hsl(var(--primary));
+    margin-top: 5px;
+    flex-shrink: 0;
+  }
+
+  /* Metric display */
+  .metric-value {
+    font-size: 0.85rem;
+    font-weight: 600;
+    font-family: 'IBM Plex Mono', monospace;
+    color: hsl(var(--foreground));
+  }
+
+  .metric-growth {
+    font-size: 0.68rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 1px 5px;
+    border-radius: 3px;
+    margin-top: 3px;
+  }
+
+  .metric-growth.positive {
+    color: hsl(150 83% 32%);
+    background: hsl(150 83% 38% / 0.1);
+    border: 1px solid hsl(150 83% 38% / 0.2);
+  }
+
+  .metric-growth.negative {
+    color: hsl(0 72% 45%);
+    background: hsl(0 72% 51% / 0.08);
+    border: 1px solid hsl(0 72% 51% / 0.2);
+  }
+
+  /* Sector badge */
+  .sector-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+
+  .sector-fintech { background: hsl(210 80% 95%); color: hsl(210 80% 35%); border: 1px solid hsl(210 80% 80%); }
+  .sector-healthtech { background: hsl(150 83% 94%); color: hsl(150 83% 28%); border: 1px solid hsl(150 83% 75%); }
+  .sector-saas { background: hsl(280 60% 95%); color: hsl(280 60% 38%); border: 1px solid hsl(280 60% 78%); }
+  .sector-logistics { background: hsl(38 92% 94%); color: hsl(38 92% 35%); border: 1px solid hsl(38 92% 72%); }
+
+  /* Category badge */
+  .category-portfolio { background: hsl(150 83% 94%); color: hsl(150 83% 28%); border: 1px solid hsl(150 83% 75%); }
+  .category-watchlist { background: hsl(38 92% 94%); color: hsl(38 80% 35%); border: 1px solid hsl(38 92% 72%); }
+  .category-research { background: hsl(280 60% 95%); color: hsl(280 60% 38%); border: 1px solid hsl(280 60% 78%); }
+
+  /* Filter input in header */
+  .header-filter {
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    border-radius: 4px;
+    padding: 3px 6px;
+    font-size: 0.65rem;
+    color: hsl(var(--foreground));
+    width: 100%;
+    margin-top: 4px;
+    outline: none;
+  }
+
+  .header-filter:focus {
+    border-color: hsl(var(--primary) / 0.6);
+    box-shadow: 0 0 0 2px hsl(var(--primary) / 0.1);
+  }
+
+  /* Growth toggle button */
+  .growth-toggle {
+    display: inline-flex;
+    background: hsl(var(--secondary));
+    border-radius: 4px;
+    padding: 2px;
+    gap: 1px;
+    margin-top: 4px;
+    border: 1px solid hsl(var(--border));
+  }
+
+  .growth-toggle-btn {
+    padding: 2px 5px;
+    border-radius: 3px;
+    font-size: 0.6rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    color: hsl(var(--muted-foreground));
+    transition: background-color var(--transition-fast), color var(--transition-fast);
+  }
+
+  .growth-toggle-btn.active {
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+  }
+
+  .growth-toggle-btn:hover:not(.active) {
+    background: hsl(var(--primary) / 0.1);
+    color: hsl(var(--primary));
+  }
+
+  /* Quarter/Month selector */
+  .period-selector {
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--primary) / 0.4);
+    border-radius: 4px;
+    padding: 3px 8px;
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: hsl(var(--primary));
+    cursor: pointer;
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
+  .period-selector:focus {
+    border-color: hsl(var(--primary));
+    box-shadow: 0 0 0 2px hsl(var(--primary) / 0.15);
+  }
+
+  .period-selector option {
+    background: hsl(var(--popover));
+    color: hsl(var(--foreground));
+  }
+
+  /* Header filter select */
+  .header-filter-select {
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    border-radius: 4px;
+    padding: 3px 6px;
+    font-size: 0.65rem;
+    color: hsl(var(--foreground));
+    width: 100%;
+    margin-top: 4px;
+    outline: none;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
+  .header-filter-select:focus {
+    border-color: hsl(var(--primary) / 0.6);
+    box-shadow: 0 0 0 2px hsl(var(--primary) / 0.1);
+  }
+
+  /* Scrollbar corner */
+  .tracker-table-wrapper::-webkit-scrollbar-corner {
+    background: hsl(var(--table-header-bg));
+  }
+
+  /* Animated entrance */
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .animate-fade-in {
+    animation: fadeInUp 0.3s ease forwards;
+  }
+
+  /* Dashboard header accent line */
+  .header-accent-line {
+    height: 3px;
+    background: linear-gradient(90deg, hsl(150 83% 38%), hsl(150 83% 55%), transparent);
+  }
+
+  /* Link style */
+  .company-link {
+    color: hsl(var(--primary));
+    text-decoration: none;
+    font-size: 0.72rem;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .company-link:hover {
+    color: hsl(var(--primary-glow));
+    text-decoration: underline;
+  }
+
+  /* Add company button */
+  .btn-add-company {
+    background: transparent;
+    border: 1.5px solid hsl(var(--primary));
+    color: hsl(var(--primary));
+    padding: 6px 16px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: background-color var(--transition-fast), color var(--transition-fast);
+  }
+
+  .btn-add-company:hover {
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+  }
+
+  /* Offerings text */
+  .offerings-text {
+    font-size: 0.72rem;
+    line-height: 1.5;
+    color: hsl(var(--foreground) / 0.7);
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Revenue badge */
+  .revenue-badge {
+    background: hsl(var(--secondary));
+    border: 1px solid hsl(var(--border));
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    font-family: 'IBM Plex Mono', monospace;
+    color: hsl(var(--foreground));
+    white-space: nowrap;
+  }
+
+  /* Company name */
+  .company-name {
+    font-weight: 600;
+    font-size: 0.82rem;
+    color: hsl(var(--foreground));
+    white-space: nowrap;
+  }
+
+  /* Numeric filter input */
+  .numeric-filter {
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    border-radius: 4px;
+    padding: 3px 6px;
+    font-size: 0.63rem;
+    color: hsl(var(--foreground));
+    width: 100%;
+    margin-top: 3px;
+    outline: none;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  .numeric-filter:focus {
+    border-color: hsl(var(--primary) / 0.6);
+    box-shadow: 0 0 0 2px hsl(var(--primary) / 0.1);
+  }
+
+  .numeric-filter::placeholder {
+    color: hsl(var(--muted-foreground) / 0.7);
+  }
+
+  /* Filter label inside th */
+  .filter-label {
+    font-size: 0.57rem;
+    color: hsl(var(--muted-foreground) / 0.7);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-top: 5px;
+    margin-bottom: 2px;
+    display: block;
+  }
+
+  /* Active filter indicator dot */
+  .filter-active-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: hsl(var(--primary));
+    display: inline-block;
+    margin-left: 4px;
+    vertical-align: middle;
+  }
+}
+
+
+@layer base {
+  :root {
     /* === GROWTH EQUITY FUND TRACKER - DARK FINANCE DESIGN SYSTEM === */
 
     /* Deep Navy Dark Background */
