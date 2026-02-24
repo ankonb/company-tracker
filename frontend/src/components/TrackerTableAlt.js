@@ -11,7 +11,7 @@ import {
   SECTORS,
   CATEGORIES,
 } from '../data/companiesAlt';
-import { AddCompanyModal } from './AddCompanyModal';
+// AddCompanyModal removed - this tracker is read-only
 
 // Revenue range ordering for filter
 const REVENUE_RANGES = ['< $1M', '$1M–$10M', '$10M–$50M', '$50M–$100M', '$100M–$250M', '$250M+'];
