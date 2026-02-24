@@ -1,22 +1,20 @@
-import React, { useState, useMemo } from 'react';
-import { ExternalLink, ChevronDown, TrendingUp, TrendingDown, Filter, X } from 'lucide-react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { ExternalLink, ChevronDown, TrendingUp, TrendingDown, Filter, X, MessageSquare, Send } from 'lucide-react';
 import {
   initialCompanies,
   quarterlyData,
   monthlyData,
   growthData,
+  interactionData,
   QUARTERS,
   MONTHS,
   GROWTH_PERIODS,
   SECTORS,
   CATEGORIES,
 } from '../data/companiesAlt';
-// AddCompanyModal removed - this tracker is read-only
 
-// Revenue range ordering for filter
 const REVENUE_RANGES = ['< $1M', '$1M–$10M', '$10M–$50M', '$50M–$100M', '$100M–$250M', '$250M+'];
 
-// Utility: format number
 const fmtNum = (n) => {
   if (!n && n !== 0) return '—';
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(2)}M`;
@@ -24,44 +22,93 @@ const fmtNum = (n) => {
   return String(n);
 };
 
-// Sector badge
+// Sector/Category color map (shared for badges in table AND chat bar)
+const BADGE_COLORS = {
+  'Healthcare & MedTech': { bg: 'hsl(340 82% 94%)', color: 'hsl(340 82% 38%)', border: 'hsl(340 82% 75%)' },
+  'E-commerce & Retail': { bg: 'hsl(24 95% 94%)', color: 'hsl(24 95% 38%)', border: 'hsl(24 95% 75%)' },
+  'EdTech & Learning': { bg: 'hsl(262 83% 94%)', color: 'hsl(262 83% 38%)', border: 'hsl(262 83% 75%)' },
+  'Real Estate & PropTech': { bg: 'hsl(142 76% 94%)', color: 'hsl(142 76% 30%)', border: 'hsl(142 76% 70%)' },
+  'SaaS & Enterprise': { bg: 'hsl(210 80% 94%)', color: 'hsl(210 80% 35%)', border: 'hsl(210 80% 75%)' },
+  'Consumer & D2C': { bg: 'hsl(38 92% 94%)', color: 'hsl(38 92% 35%)', border: 'hsl(38 92% 70%)' },
+  // Categories inherit closest sector color
+  'Telemedicine': { bg: 'hsl(340 82% 94%)', color: 'hsl(340 82% 38%)', border: 'hsl(340 82% 75%)' },
+  'Hospital Management': { bg: 'hsl(340 82% 94%)', color: 'hsl(340 82% 38%)', border: 'hsl(340 82% 75%)' },
+  'Diagnostics': { bg: 'hsl(340 82% 94%)', color: 'hsl(340 82% 38%)', border: 'hsl(340 82% 75%)' },
+  'Mental Health': { bg: 'hsl(340 82% 94%)', color: 'hsl(340 82% 38%)', border: 'hsl(340 82% 75%)' },
+  'Health Insurance Tech': { bg: 'hsl(340 82% 94%)', color: 'hsl(340 82% 38%)', border: 'hsl(340 82% 75%)' },
+  'Marketplace': { bg: 'hsl(24 95% 94%)', color: 'hsl(24 95% 38%)', border: 'hsl(24 95% 75%)' },
+  'D2C Brands': { bg: 'hsl(24 95% 94%)', color: 'hsl(24 95% 38%)', border: 'hsl(24 95% 75%)' },
+  'Social Commerce': { bg: 'hsl(24 95% 94%)', color: 'hsl(24 95% 38%)', border: 'hsl(24 95% 75%)' },
+  'Logistics Tech': { bg: 'hsl(24 95% 94%)', color: 'hsl(24 95% 38%)', border: 'hsl(24 95% 75%)' },
+  'Quick Commerce': { bg: 'hsl(38 92% 94%)', color: 'hsl(38 92% 35%)', border: 'hsl(38 92% 70%)' },
+  'K-12 Education': { bg: 'hsl(262 83% 94%)', color: 'hsl(262 83% 38%)', border: 'hsl(262 83% 75%)' },
+  'Test Prep': { bg: 'hsl(262 83% 94%)', color: 'hsl(262 83% 38%)', border: 'hsl(262 83% 75%)' },
+  'Skill Development': { bg: 'hsl(262 83% 94%)', color: 'hsl(262 83% 38%)', border: 'hsl(262 83% 75%)' },
+  'Corporate Training': { bg: 'hsl(262 83% 94%)', color: 'hsl(262 83% 38%)', border: 'hsl(262 83% 75%)' },
+  'Higher Education': { bg: 'hsl(262 83% 94%)', color: 'hsl(262 83% 38%)', border: 'hsl(262 83% 75%)' },
+  'Property Listings': { bg: 'hsl(142 76% 94%)', color: 'hsl(142 76% 30%)', border: 'hsl(142 76% 70%)' },
+  'Home Services': { bg: 'hsl(142 76% 94%)', color: 'hsl(142 76% 30%)', border: 'hsl(142 76% 70%)' },
+  'Co-working': { bg: 'hsl(142 76% 94%)', color: 'hsl(142 76% 30%)', border: 'hsl(142 76% 70%)' },
+  'Facility Management': { bg: 'hsl(142 76% 94%)', color: 'hsl(142 76% 30%)', border: 'hsl(142 76% 70%)' },
+  'CRM Solutions': { bg: 'hsl(210 80% 94%)', color: 'hsl(210 80% 35%)', border: 'hsl(210 80% 75%)' },
+  'HR Tech': { bg: 'hsl(210 80% 94%)', color: 'hsl(210 80% 35%)', border: 'hsl(210 80% 75%)' },
+  'Marketing Tech': { bg: 'hsl(210 80% 94%)', color: 'hsl(210 80% 35%)', border: 'hsl(210 80% 75%)' },
+  'Cybersecurity': { bg: 'hsl(210 80% 94%)', color: 'hsl(210 80% 35%)', border: 'hsl(210 80% 75%)' },
+  'Data Analytics': { bg: 'hsl(210 80% 94%)', color: 'hsl(210 80% 35%)', border: 'hsl(210 80% 75%)' },
+  'Food Tech': { bg: 'hsl(38 92% 94%)', color: 'hsl(38 92% 35%)', border: 'hsl(38 92% 70%)' },
+  'Travel Tech': { bg: 'hsl(38 92% 94%)', color: 'hsl(38 92% 35%)', border: 'hsl(38 92% 70%)' },
+  'Fitness & Wellness': { bg: 'hsl(38 92% 94%)', color: 'hsl(38 92% 35%)', border: 'hsl(38 92% 70%)' },
+  'Lifestyle': { bg: 'hsl(38 92% 94%)', color: 'hsl(38 92% 35%)', border: 'hsl(38 92% 70%)' },
+};
+
+const getBadgeStyle = (label) => BADGE_COLORS[label] || { bg: 'hsl(210 80% 95%)', color: 'hsl(210 80% 35%)', border: 'hsl(210 80% 80%)' };
+
 const SectorBadge = ({ sector }) => {
-  const colors = {
-    'Healthcare & MedTech': { bg: 'hsl(340 82% 94%)', color: 'hsl(340 82% 38%)', border: 'hsl(340 82% 75%)' },
-    'E-commerce & Retail': { bg: 'hsl(24 95% 94%)', color: 'hsl(24 95% 38%)', border: 'hsl(24 95% 75%)' },
-    'EdTech & Learning': { bg: 'hsl(262 83% 94%)', color: 'hsl(262 83% 38%)', border: 'hsl(262 83% 75%)' },
-    'Real Estate & PropTech': { bg: 'hsl(142 76% 94%)', color: 'hsl(142 76% 30%)', border: 'hsl(142 76% 70%)' },
-    'SaaS & Enterprise': { bg: 'hsl(210 80% 94%)', color: 'hsl(210 80% 35%)', border: 'hsl(210 80% 75%)' },
-    'Consumer & D2C': { bg: 'hsl(38 92% 94%)', color: 'hsl(38 92% 35%)', border: 'hsl(38 92% 70%)' },
-  };
-  const style = colors[sector] || { bg: 'hsl(210 80% 95%)', color: 'hsl(210 80% 35%)', border: 'hsl(210 80% 80%)' };
+  const s = getBadgeStyle(sector);
   return (
     <span
       className="text-xs font-medium px-2 py-0.5 rounded-full whitespace-nowrap"
-      style={{ background: style.bg, color: style.color, border: `1px solid ${style.border}` }}
+      style={{ background: s.bg, color: s.color, border: `1px solid ${s.border}` }}
     >
       {sector}
     </span>
   );
 };
 
-// Growth toggle
+// Inline badge for the chat bar (same colors as table)
+const InlineBadge = ({ label }) => {
+  const s = getBadgeStyle(label);
+  return (
+    <span
+      style={{
+        background: s.bg,
+        color: s.color,
+        border: `1px solid ${s.border}`,
+        padding: '1px 8px',
+        borderRadius: '9999px',
+        fontSize: '0.75rem',
+        fontWeight: 500,
+        whiteSpace: 'nowrap',
+        display: 'inline-block',
+        verticalAlign: 'middle',
+        lineHeight: '1.4',
+      }}
+    >
+      {label}
+    </span>
+  );
+};
+
 const GrowthToggle = ({ active, onChange }) => (
   <div className="growth-toggle">
     {GROWTH_PERIODS.map(p => (
-      <button
-        key={p}
-        className={`growth-toggle-btn ${active === p ? 'active' : ''}`}
-        onClick={() => onChange(p)}
-        type="button"
-      >
+      <button key={p} className={`growth-toggle-btn ${active === p ? 'active' : ''}`} onClick={() => onChange(p)} type="button">
         {p}
       </button>
     ))}
   </div>
 );
 
-// Metric cell
 const MetricCell = ({ value, growth, positive }) => (
   <div>
     <div className="metric-value">{fmtNum(value)}</div>
@@ -72,7 +119,6 @@ const MetricCell = ({ value, growth, positive }) => (
   </div>
 );
 
-// Bullet list cell
 const BulletListCell = ({ items }) => (
   <ul className="bullet-list">
     {items.map((item, i) => (
@@ -84,47 +130,222 @@ const BulletListCell = ({ items }) => (
   </ul>
 );
 
-// Min/Max dual filter row component
 const MinMaxFilter = ({ labelPrefix, minVal, maxVal, onMinChange, onMaxChange }) => (
   <div style={{ marginTop: 3 }}>
     <span className="filter-label">{labelPrefix}</span>
     <div style={{ display: 'flex', gap: 3 }}>
-      <input
-        className="numeric-filter"
-        style={{ width: '50%' }}
-        placeholder="Min"
-        value={minVal}
-        onChange={e => onMinChange(e.target.value)}
-        type="number"
-      />
-      <input
-        className="numeric-filter"
-        style={{ width: '50%' }}
-        placeholder="Max"
-        value={maxVal}
-        onChange={e => onMaxChange(e.target.value)}
-        type="number"
-      />
+      <input className="numeric-filter" style={{ width: '50%' }} placeholder="Min" value={minVal} onChange={e => onMinChange(e.target.value)} type="number" />
+      <input className="numeric-filter" style={{ width: '50%' }} placeholder="Max" value={maxVal} onChange={e => onMaxChange(e.target.value)} type="number" />
     </div>
   </div>
 );
 
-// Frozen column left offsets
+// Integration logos (inline SVG)
+const GoogleCalendarLogo = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+    <rect x="3" y="3" width="18" height="18" rx="2" fill="#fff" stroke="#4285F4" strokeWidth="1.5"/>
+    <rect x="3" y="3" width="18" height="5" rx="2" fill="#4285F4"/>
+    <text x="12" y="17" textAnchor="middle" fontSize="8" fontWeight="bold" fill="#4285F4">18</text>
+  </svg>
+);
+const GmailLogo = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+    <rect x="2" y="4" width="20" height="16" rx="2" fill="#fff" stroke="#EA4335" strokeWidth="1.2"/>
+    <path d="M2 6l10 7 10-7" stroke="#EA4335" strokeWidth="1.5" fill="none"/>
+  </svg>
+);
+const OutlookLogo = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+    <rect x="2" y="4" width="20" height="16" rx="2" fill="#0078D4"/>
+    <ellipse cx="10" cy="12" rx="5" ry="4.5" fill="#fff"/>
+    <text x="10" y="14.5" textAnchor="middle" fontSize="7" fontWeight="bold" fill="#0078D4">O</text>
+  </svg>
+);
+
 const FROZEN_OFFSETS = [0, 170, 314, 486];
 
-// Initial numeric filter state
 const INIT_NUMERIC = {
   linkedinFollowers: { valueMin: '', valueMax: '', growthMin: '', growthMax: '' },
   linkedinHeadcount: { valueMin: '', valueMax: '', growthMin: '', growthMax: '' },
   linkedinJobs:      { valueMin: '', valueMax: '', growthMin: '', growthMax: '' },
   webTraffic:        { valueMin: '', valueMax: '', growthMin: '', growthMax: '' },
 };
+const rangeActive = (f) => f.valueMin !== '' || f.valueMax !== '' || f.growthMin !== '' || f.growthMax !== '';
 
-const rangeActive = (f) =>
-  f.valueMin !== '' || f.valueMax !== '' || f.growthMin !== '' || f.growthMax !== '';
+// Interaction type badge colors
+const INTERACTION_TYPE_STYLES = {
+  Email: { bg: 'hsl(0 72% 95%)', color: 'hsl(0 72% 42%)', border: 'hsl(0 72% 78%)', icon: <GmailLogo /> },
+  Meeting: { bg: 'hsl(217 91% 95%)', color: 'hsl(217 91% 40%)', border: 'hsl(217 91% 78%)', icon: <GoogleCalendarLogo /> },
+  Call: { bg: 'hsl(142 76% 94%)', color: 'hsl(142 76% 30%)', border: 'hsl(142 76% 70%)', icon: <OutlookLogo /> },
+};
+
+// Format date nicely
+const fmtDate = (dateStr) => {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+};
+
+// Days ago
+const daysAgo = (dateStr) => {
+  const diff = Math.floor((new Date() - new Date(dateStr)) / (1000 * 60 * 60 * 24));
+  if (diff === 0) return 'Today';
+  if (diff === 1) return '1 day ago';
+  return `${diff}d ago`;
+};
+
+// ============ Chat example queries with inline badge references ============
+const CHAT_EXAMPLES = [
+  { parts: ['Which companies in the ', { badge: 'Telemedicine' }, ' category had greater than 2 customer wins?'] },
+  { parts: ['Create a market research report using the latest call transcripts for the ', { badge: 'Healthcare & MedTech' }, ' sector'] },
+  { parts: ['List companies that have grown their headcount by >10x in the ', { badge: 'K-12 Education' }, ' category'] },
+  { parts: ['Summarize key discussion points from all recent meetings with ', { badge: 'SaaS & Enterprise' }, ' companies'] },
+  { parts: ['Which ', { badge: 'E-commerce & Retail' }, ' companies have web traffic above 5M and positive YoY growth?'] },
+  { parts: ['Compare next steps across all ', { badge: 'Real Estate & PropTech' }, ' portfolio companies'] },
+  { parts: ['Show me companies in the ', { badge: 'Food Tech' }, ' category with revenue above $50M and recent email interactions'] },
+  { parts: ['Generate a competitive analysis for ', { badge: 'Cybersecurity' }, ' companies based on their latest product launches'] },
+  { parts: ['Which ', { badge: 'Consumer & D2C' }, ' companies have IPO-related discussions in their key points?'] },
+  { parts: ['Find all ', { badge: 'EdTech & Learning' }, ' companies with LinkedIn followers growth above 15%'] },
+];
+
+// Rotating chat placeholder component
+const ChatBar = () => {
+  const [currentIdx, setCurrentIdx] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [chatInput, setChatInput] = useState('');
+  const [isFocused, setIsFocused] = useState(false);
+
+  useEffect(() => {
+    if (isFocused) return;
+    const interval = setInterval(() => {
+      setIsAnimating(true);
+      setTimeout(() => {
+        setCurrentIdx(prev => (prev + 1) % CHAT_EXAMPLES.length);
+        setIsAnimating(false);
+      }, 400);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [isFocused]);
+
+  const example = CHAT_EXAMPLES[currentIdx];
+
+  return (
+    <div
+      data-testid="ai-chat-bar"
+      style={{
+        position: 'sticky',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 50,
+        padding: '12px 20px',
+        background: 'linear-gradient(to top, hsl(var(--background)) 70%, transparent)',
+      }}
+    >
+      <div
+        style={{
+          maxWidth: 900,
+          margin: '0 auto',
+          background: 'hsl(var(--card))',
+          borderRadius: 16,
+          border: '1px solid hsl(var(--border))',
+          boxShadow: '0 -4px 24px hsl(0 0% 0% / 0.06), 0 2px 8px hsl(0 0% 0% / 0.04)',
+          padding: '4px 4px 4px 16px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+          transition: 'box-shadow 0.2s ease',
+          ...(isFocused ? { boxShadow: '0 -4px 24px hsl(340 82% 52% / 0.12), 0 0 0 2px hsl(340 82% 52% / 0.15)' } : {}),
+        }}
+      >
+        <MessageSquare size={16} style={{ color: 'hsl(340 82% 52%)', flexShrink: 0 }} />
+
+        <div style={{ flex: 1, position: 'relative', minHeight: 40, display: 'flex', alignItems: 'center' }}>
+          {/* Placeholder with badges (shown when input is empty and not focused) */}
+          {!chatInput && !isFocused && (
+            <div
+              data-testid="chat-rotating-placeholder"
+              style={{
+                position: 'absolute',
+                inset: 0,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 4,
+                flexWrap: 'wrap',
+                pointerEvents: 'none',
+                opacity: isAnimating ? 0 : 1,
+                transform: isAnimating ? 'translateY(8px)' : 'translateY(0)',
+                transition: 'opacity 0.35s ease, transform 0.35s ease',
+                fontSize: '0.82rem',
+                color: 'hsl(var(--muted-foreground))',
+                lineHeight: '1.5',
+                overflow: 'hidden',
+              }}
+            >
+              {example.parts.map((part, i) =>
+                typeof part === 'string' ? (
+                  <span key={i}>{part}</span>
+                ) : (
+                  <InlineBadge key={i} label={part.badge} />
+                )
+              )}
+            </div>
+          )}
+
+          <input
+            data-testid="chat-input"
+            type="text"
+            value={chatInput}
+            onChange={e => setChatInput(e.target.value)}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => { if (!chatInput) setIsFocused(false); }}
+            placeholder={isFocused ? 'Ask about your portfolio companies...' : ''}
+            style={{
+              width: '100%',
+              border: 'none',
+              outline: 'none',
+              background: 'transparent',
+              fontSize: '0.82rem',
+              color: 'hsl(var(--foreground))',
+              lineHeight: '40px',
+              fontFamily: 'inherit',
+            }}
+          />
+        </div>
+
+        <button
+          data-testid="chat-send-button"
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: 12,
+            background: 'linear-gradient(135deg, hsl(340 82% 52%), hsl(24 95% 53%))',
+            border: 'none',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+            transition: 'transform 0.15s ease, opacity 0.15s ease',
+            opacity: chatInput ? 1 : 0.5,
+          }}
+          onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.05)'; }}
+          onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; }}
+        >
+          <Send size={14} color="white" />
+        </button>
+      </div>
+
+      <div style={{ textAlign: 'center', marginTop: 4 }}>
+        <span style={{ fontSize: '0.65rem', color: 'hsl(var(--muted-foreground))', opacity: 0.6 }}>
+          AI-powered portfolio intelligence — ask questions about your data using natural language
+        </span>
+      </div>
+    </div>
+  );
+};
 
 export const TrackerTableAlt = () => {
-  const [companies, setCompanies] = useState(initialCompanies);
+  const [companies] = useState(initialCompanies);
   const [selectedQuarter, setSelectedQuarter] = useState('Q4 FY25');
   const [selectedMonth, setSelectedMonth] = useState('Apr 2025');
   const [growthToggles, setGrowthToggles] = useState({
@@ -138,7 +359,6 @@ export const TrackerTableAlt = () => {
   const [categoryFilter, setCategoryFilter] = useState('');
   const [revenueFilter, setRevenueFilter] = useState('');
   const [numericFilters, setNumericFilters] = useState(INIT_NUMERIC);
-
   const [hoveredRow, setHoveredRow] = useState(null);
 
   const setNumField = (col, field, val) =>
@@ -215,7 +435,7 @@ export const TrackerTableAlt = () => {
             </svg>
           </div>
           <div>
-            <h1 className="text-lg font-semibold" style={{ color: 'hsl(var(--foreground))' }}>
+            <h1 className="text-lg font-semibold" style={{ color: 'hsl(var(--foreground))' }} data-testid="alt-tracker-title">
               Portfolio Tracker - Client View
             </h1>
             <p className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>
@@ -247,7 +467,6 @@ export const TrackerTableAlt = () => {
             </span>{' '}
             of {companies.length} companies
           </span>
-
           {hasActiveFilters && (
             <button
               className="text-xs px-2 py-0.5 rounded-md flex items-center gap-1"
@@ -264,14 +483,13 @@ export const TrackerTableAlt = () => {
             </button>
           )}
         </div>
-
         <div className="text-xs px-3 py-1.5 rounded-lg" style={{ background: 'hsl(var(--secondary))', color: 'hsl(var(--muted-foreground))' }}>
           Read-only view
         </div>
       </div>
 
       {/* Table */}
-      <div className="tracker-table-wrapper flex-1" style={{ margin: '12px 16px' }}>
+      <div className="tracker-table-wrapper flex-1" style={{ margin: '12px 16px', marginBottom: 0 }}>
         <table className="tracker-table">
           <thead>
             <tr>
@@ -298,6 +516,18 @@ export const TrackerTableAlt = () => {
                   <select className="period-selector" value={selectedMonth} onChange={e => setSelectedMonth(e.target.value)}>
                     {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
                   </select>
+                </div>
+              </th>
+              {/* New: Interaction Tracking column group */}
+              <th colSpan={4} className="tracker-th group-header" data-testid="interaction-tracking-header" style={{ minWidth: 700, borderLeft: '2px solid hsl(var(--border))' }}>
+                <div className="flex items-center gap-2">
+                  <span style={{ color: 'hsl(217 91% 45%)' }}>Interaction Tracking</span>
+                  <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginLeft: 6, padding: '2px 8px', background: 'hsl(217 91% 97%)', borderRadius: 8, border: '1px solid hsl(217 91% 90%)' }}>
+                    <GoogleCalendarLogo />
+                    <GmailLogo />
+                    <OutlookLogo />
+                    <span style={{ fontSize: '0.6rem', color: 'hsl(217 91% 50%)', fontWeight: 500, letterSpacing: '0.02em' }}>Connected</span>
+                  </div>
                 </div>
               </th>
             </tr>
@@ -365,13 +595,35 @@ export const TrackerTableAlt = () => {
                 <MinMaxFilter labelPrefix="Value" minVal={numericFilters.webTraffic.valueMin} maxVal={numericFilters.webTraffic.valueMax} onMinChange={v => setNumField('webTraffic', 'valueMin', v)} onMaxChange={v => setNumField('webTraffic', 'valueMax', v)} />
                 <MinMaxFilter labelPrefix="Growth %" minVal={numericFilters.webTraffic.growthMin} maxVal={numericFilters.webTraffic.growthMax} onMinChange={v => setNumField('webTraffic', 'growthMin', v)} onMaxChange={v => setNumField('webTraffic', 'growthMax', v)} />
               </th>
+              {/* New: Interaction Tracking sub-headers */}
+              <th className="tracker-th" data-testid="col-last-interaction-date" style={{ minWidth: 130, borderLeft: '2px solid hsl(var(--border))' }}>
+                <div className="flex items-center gap-1.5">
+                  <GoogleCalendarLogo />
+                  <span>Last Interaction</span>
+                </div>
+              </th>
+              <th className="tracker-th" data-testid="col-interaction-type" style={{ minWidth: 120 }}>
+                <div className="flex items-center gap-1.5">
+                  <GmailLogo />
+                  <span>Type</span>
+                </div>
+              </th>
+              <th className="tracker-th" data-testid="col-key-points" style={{ minWidth: 220 }}>
+                <div className="flex items-center gap-1.5">
+                  <OutlookLogo />
+                  <span>Key Discussion Points</span>
+                </div>
+              </th>
+              <th className="tracker-th" data-testid="col-next-steps" style={{ minWidth: 220 }}>
+                Next Steps
+              </th>
             </tr>
           </thead>
 
           <tbody>
             {filteredCompanies.length === 0 ? (
               <tr>
-                <td colSpan={15} className="tracker-cell text-center py-12" style={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.85rem' }}>
+                <td colSpan={19} className="tracker-cell text-center py-12" style={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.85rem' }}>
                   No companies match the active filters.{' '}
                   <button onClick={clearAllFilters} style={{ color: 'hsl(340 82% 45%)', cursor: 'pointer', textDecoration: 'underline' }}>
                     Clear all filters
@@ -383,17 +635,20 @@ export const TrackerTableAlt = () => {
                 const origIdx = getOriginalIdx(company);
                 const dataIdx = origIdx >= 0 ? origIdx : 0;
 
-                const mData       = monthlyData[selectedMonth]?.[dataIdx] || {};
-                const gFollowers  = growthData[growthToggles.linkedinFollowers]?.[dataIdx] || {};
-                const gHeadcount  = growthData[growthToggles.linkedinHeadcount]?.[dataIdx] || {};
-                const gJobs       = growthData[growthToggles.linkedinJobs]?.[dataIdx] || {};
-                const gTraffic    = growthData[growthToggles.webTraffic]?.[dataIdx] || {};
+                const mData      = monthlyData[selectedMonth]?.[dataIdx] || {};
+                const gFollowers = growthData[growthToggles.linkedinFollowers]?.[dataIdx] || {};
+                const gHeadcount = growthData[growthToggles.linkedinHeadcount]?.[dataIdx] || {};
+                const gJobs      = growthData[growthToggles.linkedinJobs]?.[dataIdx] || {};
+                const gTraffic   = growthData[growthToggles.webTraffic]?.[dataIdx] || {};
 
-                const newsItems = qData?.newsHighlights?.[dataIdx] || ['No data', 'No data', 'No data'];
-                const custItems = qData?.customerWins?.[dataIdx]   || ['No data', 'No data', 'No data'];
-                const partItems = qData?.partnerships?.[dataIdx]   || ['No data', 'No data', 'No data'];
-                const cxoItems  = qData?.cxoChanges?.[dataIdx]     || ['No data', 'No data', 'No data'];
-                const prodItems = qData?.newProducts?.[dataIdx]    || ['No data', 'No data', 'No data'];
+                const newsItems = qData?.newsHighlights?.[dataIdx] || ['No data'];
+                const custItems = qData?.customerWins?.[dataIdx]   || ['No data'];
+                const partItems = qData?.partnerships?.[dataIdx]   || ['No data'];
+                const cxoItems  = qData?.cxoChanges?.[dataIdx]     || ['No data'];
+                const prodItems = qData?.newProducts?.[dataIdx]    || ['No data'];
+
+                const interaction = interactionData[dataIdx] || {};
+                const typeStyle = INTERACTION_TYPE_STYLES[interaction.type] || INTERACTION_TYPE_STYLES.Email;
 
                 const isHovered = hoveredRow === company.id;
                 const frozenBg = isHovered
@@ -429,18 +684,10 @@ export const TrackerTableAlt = () => {
                     <td className="tracker-cell" style={{ borderLeft: '2px solid hsl(var(--border))', minWidth: 166 }}>
                       <BulletListCell items={newsItems} />
                     </td>
-                    <td className="tracker-cell" style={{ minWidth: 166 }}>
-                      <BulletListCell items={custItems} />
-                    </td>
-                    <td className="tracker-cell" style={{ minWidth: 166 }}>
-                      <BulletListCell items={partItems} />
-                    </td>
-                    <td className="tracker-cell" style={{ minWidth: 166 }}>
-                      <BulletListCell items={cxoItems} />
-                    </td>
-                    <td className="tracker-cell" style={{ minWidth: 166 }}>
-                      <BulletListCell items={prodItems} />
-                    </td>
+                    <td className="tracker-cell" style={{ minWidth: 166 }}><BulletListCell items={custItems} /></td>
+                    <td className="tracker-cell" style={{ minWidth: 166 }}><BulletListCell items={partItems} /></td>
+                    <td className="tracker-cell" style={{ minWidth: 166 }}><BulletListCell items={cxoItems} /></td>
+                    <td className="tracker-cell" style={{ minWidth: 166 }}><BulletListCell items={prodItems} /></td>
                     <td className="tracker-cell" style={{ borderLeft: '2px solid hsl(var(--border))', minWidth: 165 }}>
                       <MetricCell value={mData.linkedinFollowers || 0} growth={gFollowers.linkedinFollowers || 0} positive={(gFollowers.linkedinFollowers || 0) >= 0} />
                     </td>
@@ -453,6 +700,40 @@ export const TrackerTableAlt = () => {
                     <td className="tracker-cell" style={{ minWidth: 165 }}>
                       <MetricCell value={mData.webTraffic || 0} growth={gTraffic.webTraffic || 0} positive={(gTraffic.webTraffic || 0) >= 0} />
                     </td>
+
+                    {/* Interaction Tracking cells */}
+                    <td className="tracker-cell" data-testid={`interaction-date-${company.id}`} style={{ borderLeft: '2px solid hsl(var(--border))', minWidth: 130 }}>
+                      <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
+                        {interaction.lastDate ? fmtDate(interaction.lastDate) : '—'}
+                      </div>
+                      <div style={{ fontSize: '0.65rem', color: 'hsl(var(--muted-foreground))', marginTop: 2 }}>
+                        {interaction.lastDate ? daysAgo(interaction.lastDate) : ''}
+                      </div>
+                    </td>
+                    <td className="tracker-cell" data-testid={`interaction-type-${company.id}`} style={{ minWidth: 120 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                        {typeStyle.icon}
+                        <span
+                          style={{
+                            fontSize: '0.7rem',
+                            fontWeight: 500,
+                            padding: '2px 8px',
+                            borderRadius: 6,
+                            background: typeStyle.bg,
+                            color: typeStyle.color,
+                            border: `1px solid ${typeStyle.border}`,
+                          }}
+                        >
+                          {interaction.type || '—'}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="tracker-cell" data-testid={`key-points-${company.id}`} style={{ minWidth: 220 }}>
+                      <BulletListCell items={interaction.keyPoints || ['No data']} />
+                    </td>
+                    <td className="tracker-cell" data-testid={`next-steps-${company.id}`} style={{ minWidth: 220 }}>
+                      <BulletListCell items={interaction.nextSteps || ['No data']} />
+                    </td>
                   </tr>
                 );
               })
@@ -461,7 +742,8 @@ export const TrackerTableAlt = () => {
         </table>
       </div>
 
-      {/* Read-only tracker - no add company modal */}
+      {/* AI Chat Bar */}
+      <ChatBar />
     </div>
   );
 };
