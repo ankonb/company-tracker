@@ -731,10 +731,10 @@ export const TrackerTableAlt = () => {
                       <FinancialCell value={fin.revenue} growth={fin.revenueGrowth || 0} format="inr" showYoY />
                     </td>
                     <td className="tracker-cell" style={{ minWidth: 160 }}>
-                      <FinancialCell value={Math.round((fin.revenue || 0) * (fin.grossMargin || 0) / 100)} growth={fin.grossMarginGrowth || 0} format="inr" />
+                      <FinancialCell value={Math.round((fin.revenue || 0) * (fin.grossMargin || 0) / 100)} growth={fin.grossMargin || 0} format="inr" noArrow />
                     </td>
                     <td className="tracker-cell" style={{ minWidth: 160 }}>
-                      <FinancialCell value={fin.ebitda} growth={fin.ebitdaGrowth || 0} format="inr" />
+                      <FinancialCell value={fin.ebitda} growth={fin.revenue ? parseFloat(((fin.ebitda || 0) / fin.revenue * 100).toFixed(1)) : 0} format="inr" noArrow />
                     </td>
 
                     <td className="tracker-cell" style={{ borderLeft: '2px solid hsl(var(--border))', minWidth: 260, maxWidth: 260 }}>
