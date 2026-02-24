@@ -188,10 +188,6 @@ export const TrackerTableAlt = () => {
     });
   }, [companies, sectorFilter, categoryFilter, revenueFilter, numericFilters, selectedMonth, growthToggles]);
 
-  const handleAddCompany = (newCompany) => {
-    setCompanies(prev => [...prev, newCompany]);
-  };
-
   const clearAllFilters = () => {
     setSectorFilter('');
     setCategoryFilter('');
