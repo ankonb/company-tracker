@@ -79,9 +79,13 @@ const BadgeSpan = ({ label, style: overrideStyle }) => {
   return <span className="text-xs font-medium px-2 py-0.5 rounded-full whitespace-nowrap" style={{ background: s.bg, color: s.color, border: `1px solid ${s.border}`, ...overrideStyle }}>{label}</span>;
 };
 
-const InlineBadge = ({ label, type }) => {
+const InlineBadge = ({ label, type, prefix }) => {
   const s = type === 'col' ? COL_BADGE : getBadgeStyle(label);
-  return <span style={{ background: s.bg, color: s.color, border: `1px solid ${s.border}`, padding: '1px 8px', borderRadius: type === 'col' ? 6 : 9999, fontSize: '0.75rem', fontWeight: 500, whiteSpace: 'nowrap', display: 'inline-block', verticalAlign: 'middle', lineHeight: '1.4' }}>{label}</span>;
+  return (
+    <span style={{ background: s.bg, color: s.color, border: `1px solid ${s.border}`, padding: '1px 8px', borderRadius: type === 'col' ? 6 : 9999, fontSize: '0.75rem', fontWeight: 500, whiteSpace: 'nowrap', display: 'inline-block', verticalAlign: 'middle', lineHeight: '1.4' }}>
+      {prefix && <span style={{ opacity: 0.55, marginRight: 2 }}>{prefix}</span>}{label}
+    </span>
+  );
 };
 
 const GrowthToggle = ({ active, onChange }) => (
