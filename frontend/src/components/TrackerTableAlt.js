@@ -398,8 +398,11 @@ export const TrackerTableAlt = () => {
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 flex-shrink-0" style={{ background: 'hsl(var(--card))', borderBottom: '1px solid hsl(var(--border))' }}>
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, hsl(340 82% 52%), hsl(24 95% 53%))', boxShadow: '0 4px 12px hsl(340 82% 52% / 0.3)' }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M3 3v18h18" /><path d="M18 9l-5 5-4-4-3 3" /></svg>
+          <div className="flex-shrink-0" style={{ width: 36, height: 36 }}>
+            <svg width="36" height="36" viewBox="0 0 40 40" fill="none">
+              <rect x="2" y="8" width="24" height="24" rx="2" fill="none" stroke="#0d4d57" strokeWidth="3"/>
+              <rect x="14" y="4" width="22" height="22" rx="2" fill="#3a9e7e"/>
+            </svg>
           </div>
           <div>
             <h1 className="text-lg font-semibold" style={{ color: 'hsl(var(--foreground))' }} data-testid="alt-tracker-title">Company Tracker</h1>
@@ -409,7 +412,7 @@ export const TrackerTableAlt = () => {
         <div className="flex items-center gap-4">
           <div className="text-xs px-3 py-1.5 rounded-lg" style={{ background: 'hsl(var(--secondary))', color: 'hsl(var(--foreground))' }}><span className="font-semibold">{companies.length}</span> Companies</div>
           <div className="text-xs px-3 py-1.5 rounded-lg" style={{ background: 'hsl(var(--secondary))', color: 'hsl(var(--foreground))' }}><span className="font-semibold">{SECTORS.length}</span> Sectors</div>
-          <button className="btn-add-company" data-testid="add-company-btn" onClick={() => setAddModalOpen(true)} style={{ background: 'linear-gradient(135deg, hsl(340 82% 52%), hsl(24 95% 53%))' }}>
+          <button className="btn-add-company" data-testid="add-company-btn" onClick={() => setAddModalOpen(true)} style={{ background: 'white', color: 'hsl(var(--foreground))', border: '1px solid hsl(var(--border))', boxShadow: '0 1px 3px hsl(0 0% 0% / 0.06)' }}>
             <Plus size={13} /> Add Company
           </button>
         </div>
