@@ -270,10 +270,9 @@ export const TrackerTableAlt = () => {
           )}
         </div>
 
-        <button className="btn-add-company" onClick={() => setAddModalOpen(true)} style={{ background: 'linear-gradient(135deg, hsl(340 82% 52%), hsl(24 95% 53%))' }}>
-          <Plus size={13} />
-          Add Company
-        </button>
+        <div className="text-xs px-3 py-1.5 rounded-lg" style={{ background: 'hsl(var(--secondary))', color: 'hsl(var(--muted-foreground))' }}>
+          Read-only view
+        </div>
       </div>
 
       {/* Table */}
@@ -467,7 +466,7 @@ export const TrackerTableAlt = () => {
         </table>
       </div>
 
-      <AddCompanyModal open={addModalOpen} onClose={() => setAddModalOpen(false)} onAdd={handleAddCompany} />
+      {/* Read-only tracker - no add company modal */}
     </div>
   );
 };
