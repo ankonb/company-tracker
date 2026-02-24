@@ -221,11 +221,29 @@ const CHAT_EXAMPLES = [
   ]},
 ];
 
+// Column names for @ autocomplete
+const COLUMN_NAMES = [
+  'Revenue', 'Gross Margin', 'EBITDA', 'Offerings Summary',
+  'News Highlights', 'Customer Wins', 'Partnerships', 'CXO Changes', 'New Products & Launches',
+  'LinkedIn Followers', 'LinkedIn Headcount', 'LinkedIn Job Openings', 'Web Traffic',
+  'Last Interaction', 'Last Interaction Type', 'Key Discussion Points', 'Next Steps',
+];
+// Sector + Category options for # autocomplete
+const HASH_OPTIONS = [...SECTORS, ...CATEGORIES];
+
 const ChatBar = () => {
   const [currentIdx, setCurrentIdx] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [chatInput, setChatInput] = useState('');
   const [isFocused, setIsFocused] = useState(false);
+
+  // Autocomplete state
+  const [acOpen, setAcOpen] = useState(false);
+  const [acType, setAcType] = useState(null); // 'hash' or 'at'
+  const [acQuery, setAcQuery] = useState('');
+  const [acTriggerPos, setAcTriggerPos] = useState(-1);
+  const inputRef = useRef(null);
+  const acRef = useRef(null);
 
   useEffect(() => {
     if (isFocused) return;
@@ -235,6 +253,56 @@ const ChatBar = () => {
     }, 4000);
     return () => clearInterval(interval);
   }, [isFocused]);
+
+  // Close autocomplete on outside click
+  useEffect(() => {
+    const handler = (e) => { if (acRef.current && !acRef.current.contains(e.target)) setAcOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const handleInputChange = (e) => {
+    const val = e.target.value;
+    setChatInput(val);
+
+    // Check for # or @ triggers
+    const cursorPos = e.target.selectionStart;
+    let foundTrigger = false;
+
+    // Scan backwards from cursor to find the most recent unmatched # or @
+    for (let i = cursorPos - 1; i >= 0; i--) {
+      const ch = val[i];
+      if (ch === ' ' && i < cursorPos - 1) break; // stop at space if we have some query
+      if (ch === '#' || ch === '@') {
+        const query = val.substring(i + 1, cursorPos);
+        setAcType(ch === '#' ? 'hash' : 'at');
+        setAcQuery(query.toLowerCase());
+        setAcTriggerPos(i);
+        setAcOpen(true);
+        foundTrigger = true;
+        break;
+      }
+    }
+    if (!foundTrigger) {
+      setAcOpen(false);
+    }
+  };
+
+  const handleSelect = (option) => {
+    // Replace trigger + query with the selected option
+    const before = chatInput.substring(0, acTriggerPos);
+    const after = chatInput.substring(acTriggerPos + 1 + acQuery.length);
+    const trigger = acType === 'hash' ? '#' : '@';
+    setChatInput(before + trigger + option + after + ' ');
+    setAcOpen(false);
+    inputRef.current?.focus();
+  };
+
+  const acOptions = useMemo(() => {
+    const list = acType === 'hash' ? HASH_OPTIONS : COLUMN_NAMES;
+    if (!acQuery) return list.slice(0, 8);
+    return list.filter(o => o.toLowerCase().includes(acQuery)).slice(0, 8);
+  }, [acType, acQuery]);
 
   const example = CHAT_EXAMPLES[currentIdx];
 
@@ -274,6 +342,7 @@ const ChatBar = () => {
         maxWidth: 900, margin: '0 auto', background: 'hsl(var(--card))', borderRadius: 16,
         border: '1px solid hsl(var(--border))', boxShadow: isFocused ? '0 -4px 24px hsl(160 40% 45% / 0.12), 0 0 0 2px hsl(160 40% 45% / 0.15)' : '0 -4px 24px hsl(0 0% 0% / 0.06), 0 2px 8px hsl(0 0% 0% / 0.04)',
         padding: '4px 4px 4px 16px', display: 'flex', alignItems: 'center', gap: 10, transition: 'box-shadow 0.2s ease',
+        position: 'relative',
       }}>
         <MessageSquare size={16} style={{ color: 'hsl(160 40% 40%)', flexShrink: 0 }} />
         <div style={{ flex: 1, position: 'relative', minHeight: 40, display: 'flex', alignItems: 'center' }}>
@@ -286,11 +355,58 @@ const ChatBar = () => {
               {renderPlaceholder()}
             </div>
           )}
-          <input data-testid="chat-input" type="text" value={chatInput} onChange={e => setChatInput(e.target.value)}
-            onFocus={() => setIsFocused(true)} onBlur={() => { if (!chatInput) setIsFocused(false); }}
+          <input ref={inputRef} data-testid="chat-input" type="text" value={chatInput} onChange={handleInputChange}
+            onFocus={() => setIsFocused(true)} onBlur={() => { if (!chatInput) { setIsFocused(false); } }}
+            onKeyDown={(e) => { if (e.key === 'Escape') setAcOpen(false); }}
             placeholder={isFocused ? 'Use # for sectors/categories, @ for columns...' : ''}
             style={{ width: '100%', border: 'none', outline: 'none', background: 'transparent', fontSize: '0.82rem', color: 'hsl(var(--foreground))', lineHeight: '40px', fontFamily: 'inherit' }}
           />
+
+          {/* Autocomplete dropdown */}
+          {acOpen && acOptions.length > 0 && (
+            <div ref={acRef} data-testid="chat-autocomplete-dropdown" style={{
+              position: 'absolute', bottom: '100%', left: 0, right: 0, marginBottom: 6, zIndex: 60,
+              background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 10,
+              boxShadow: '0 -8px 24px hsl(0 0% 0% / 0.1)', padding: 4, maxHeight: 240, overflowY: 'auto',
+            }}>
+              <div style={{ padding: '4px 10px 6px', fontSize: '0.65rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'hsl(var(--muted-foreground))' }}>
+                {acType === 'hash' ? 'Sectors & Categories' : 'Column Names'}
+              </div>
+              {acOptions.map((option) => {
+                const s = acType === 'hash' ? getBadgeStyle(option) : COL_BADGE;
+                return (
+                  <button key={option} data-testid={`ac-option-${option}`}
+                    onMouseDown={(e) => { e.preventDefault(); handleSelect(option); }}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '6px 10px',
+                      border: 'none', background: 'transparent', cursor: 'pointer', borderRadius: 6,
+                      fontSize: '0.78rem', color: 'hsl(var(--foreground))', textAlign: 'left',
+                      transition: 'background 0.1s ease',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'hsl(var(--secondary))'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+                  >
+                    <span style={{
+                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                      width: 18, height: 18, borderRadius: 4, fontWeight: 700, fontSize: '0.7rem',
+                      background: acType === 'hash' ? 'hsl(340 82% 92%)' : 'hsl(220 15% 92%)',
+                      color: acType === 'hash' ? 'hsl(340 82% 42%)' : 'hsl(220 15% 35%)',
+                      flexShrink: 0,
+                    }}>
+                      {acType === 'hash' ? '#' : '@'}
+                    </span>
+                    <span style={{
+                      padding: '1px 8px', borderRadius: acType === 'hash' ? 9999 : 6,
+                      background: s.bg, color: s.color, border: `1px solid ${s.border}`,
+                      fontSize: '0.72rem', fontWeight: 500,
+                    }}>
+                      {option}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
         <button data-testid="chat-send-button" style={{
           width: 36, height: 36, borderRadius: 10, background: '#3a9e7e',
