@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { ExternalLink, Plus, ChevronDown, TrendingUp, TrendingDown, Filter, X, MessageSquare, Send } from 'lucide-react';
+import { ExternalLink, Plus, ChevronDown, TrendingUp, TrendingDown, Filter, X, MessageSquare, ArrowUp } from 'lucide-react';
 import {
   initialCompanies,
   quarterlyData,
