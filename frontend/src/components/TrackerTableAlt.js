@@ -103,7 +103,7 @@ const MetricCell = ({ value, growth, positive }) => (
   </div>
 );
 
-const FinancialCell = ({ value, growth, format, showYoY = false }) => (
+const FinancialCell = ({ value, growth, format, showYoY = false, noArrow = false }) => (
   <div>
     <div style={{ fontWeight: 700, fontSize: '0.82rem', color: 'hsl(var(--foreground))' }}>
       {format === 'pct' ? `${value}%` : fmtINR(value)}
@@ -115,7 +115,7 @@ const FinancialCell = ({ value, growth, format, showYoY = false }) => (
       color: growth >= 0 ? 'hsl(142 76% 28%)' : 'hsl(0 84% 38%)',
       border: `1px solid ${growth >= 0 ? 'hsl(142 76% 78%)' : 'hsl(0 84% 78%)'}`,
     }}>
-      {growth >= 0 ? <TrendingUp size={9} /> : <TrendingDown size={9} />}
+      {!noArrow && (growth >= 0 ? <TrendingUp size={9} /> : <TrendingDown size={9} />)}
       {growth >= 0 ? '+' : ''}{growth.toFixed(1)}%{showYoY ? ' YoY' : ''}
     </div>
   </div>
