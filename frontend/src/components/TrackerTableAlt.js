@@ -474,9 +474,9 @@ export const TrackerTableAlt = () => {
       if (!passesRange(fin.revenue || 0, ff.revenue.valueMin, ff.revenue.valueMax)) return false;
       if (!passesRange(fin.revenueGrowth || 0, ff.revenue.growthMin, ff.revenue.growthMax)) return false;
       if (!passesRange(Math.round((fin.revenue || 0) * (fin.grossMargin || 0) / 100), ff.grossMargin.valueMin, ff.grossMargin.valueMax)) return false;
-      if (!passesRange(fin.grossMarginGrowth || 0, ff.grossMargin.growthMin, ff.grossMargin.growthMax)) return false;
+      if (!passesRange(fin.grossMargin || 0, ff.grossMargin.growthMin, ff.grossMargin.growthMax)) return false;
       if (!passesRange(fin.ebitda || 0, ff.ebitda.valueMin, ff.ebitda.valueMax)) return false;
-      if (!passesRange(fin.ebitdaGrowth || 0, ff.ebitda.growthMin, ff.ebitda.growthMax)) return false;
+      if (!passesRange(fin.revenue ? (fin.ebitda || 0) / fin.revenue * 100 : 0, ff.ebitda.growthMin, ff.ebitda.growthMax)) return false;
 
       // Monthly numeric filters
       const mData = monthlyData[selectedMonth]?.[origIdx] || {};
