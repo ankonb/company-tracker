@@ -616,7 +616,7 @@ export const TrackerTableAlt = () => {
               <th className="tracker-th" data-testid="col-gross-margin" style={{ minWidth: 160 }}>
                 <div className="flex items-center gap-1">{'Gross Margin (\u20B9)'} {rangeActive(financialFilters.grossMargin) && <span className="filter-active-dot" />}</div>
                 <MinMaxFilter labelPrefix="Value (Cr)" minVal={financialFilters.grossMargin.valueMin} maxVal={financialFilters.grossMargin.valueMax} onMinChange={v => setFinField('grossMargin','valueMin',v)} onMaxChange={v => setFinField('grossMargin','valueMax',v)} />
-                <MinMaxFilter labelPrefix="Growth %" minVal={financialFilters.grossMargin.growthMin} maxVal={financialFilters.grossMargin.growthMax} onMinChange={v => setFinField('grossMargin','growthMin',v)} onMaxChange={v => setFinField('grossMargin','growthMax',v)} />
+                <MinMaxFilter labelPrefix="Margin %" minVal={financialFilters.grossMargin.growthMin} maxVal={financialFilters.grossMargin.growthMax} onMinChange={v => setFinField('grossMargin','growthMin',v)} onMaxChange={v => setFinField('grossMargin','growthMax',v)} />
               </th>
               {/* Annual: EBITDA */}
               <th className="tracker-th" data-testid="col-ebitda" style={{ minWidth: 160 }}>
