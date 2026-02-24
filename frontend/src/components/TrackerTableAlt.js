@@ -237,14 +237,45 @@ const ChatBar = () => {
   }, [isFocused]);
 
   const example = CHAT_EXAMPLES[currentIdx];
+
+  const renderPlaceholder = () => {
+    if (example.isTutorial) {
+      return (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+          {example.parts.map((part, i) => {
+            if (part.text) return <span key={i}>{part.text}</span>;
+            const isHash = part.style === 'hash';
+            return (
+              <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                <span style={{
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  width: 20, height: 20, borderRadius: 5, fontWeight: 700, fontSize: '0.8rem',
+                  background: isHash ? 'hsl(340 82% 92%)' : 'hsl(220 15% 92%)',
+                  color: isHash ? 'hsl(340 82% 42%)' : 'hsl(220 15% 35%)',
+                  border: `1px solid ${isHash ? 'hsl(340 82% 78%)' : 'hsl(220 15% 78%)'}`,
+                }}>{part.symbol}</span>
+                <span style={{ fontSize: '0.78rem', color: 'hsl(var(--muted-foreground))' }}>{part.label}</span>
+              </span>
+            );
+          })}
+        </div>
+      );
+    }
+    return example.parts.map((part, i) =>
+      typeof part === 'string' ? <span key={i}>{part}</span> :
+      part.badge ? <InlineBadge key={i} label={part.badge} prefix={part.prefix} /> :
+      <InlineBadge key={i} label={part.colBadge} type="col" prefix={part.prefix} />
+    );
+  };
+
   return (
     <div data-testid="ai-chat-bar" style={{ position: 'sticky', bottom: 0, left: 0, right: 0, zIndex: 50, padding: '12px 20px', background: 'linear-gradient(to top, hsl(var(--background)) 70%, transparent)' }}>
       <div style={{
         maxWidth: 900, margin: '0 auto', background: 'hsl(var(--card))', borderRadius: 16,
-        border: '1px solid hsl(var(--border))', boxShadow: isFocused ? '0 -4px 24px hsl(340 82% 52% / 0.12), 0 0 0 2px hsl(340 82% 52% / 0.15)' : '0 -4px 24px hsl(0 0% 0% / 0.06), 0 2px 8px hsl(0 0% 0% / 0.04)',
+        border: '1px solid hsl(var(--border))', boxShadow: isFocused ? '0 -4px 24px hsl(160 40% 45% / 0.12), 0 0 0 2px hsl(160 40% 45% / 0.15)' : '0 -4px 24px hsl(0 0% 0% / 0.06), 0 2px 8px hsl(0 0% 0% / 0.04)',
         padding: '4px 4px 4px 16px', display: 'flex', alignItems: 'center', gap: 10, transition: 'box-shadow 0.2s ease',
       }}>
-        <MessageSquare size={16} style={{ color: 'hsl(340 82% 52%)', flexShrink: 0 }} />
+        <MessageSquare size={16} style={{ color: 'hsl(160 40% 40%)', flexShrink: 0 }} />
         <div style={{ flex: 1, position: 'relative', minHeight: 40, display: 'flex', alignItems: 'center' }}>
           {!chatInput && !isFocused && (
             <div data-testid="chat-rotating-placeholder" style={{
@@ -252,24 +283,21 @@ const ChatBar = () => {
               pointerEvents: 'none', opacity: isAnimating ? 0 : 1, transform: isAnimating ? 'translateY(8px)' : 'translateY(0)',
               transition: 'opacity 0.35s ease, transform 0.35s ease', fontSize: '0.82rem', color: 'hsl(var(--muted-foreground))', lineHeight: '1.5', overflow: 'hidden',
             }}>
-              {example.parts.map((part, i) =>
-                typeof part === 'string' ? <span key={i}>{part}</span> :
-                part.badge ? <InlineBadge key={i} label={part.badge} /> :
-                <InlineBadge key={i} label={part.colBadge} type="col" />
-              )}
+              {renderPlaceholder()}
             </div>
           )}
           <input data-testid="chat-input" type="text" value={chatInput} onChange={e => setChatInput(e.target.value)}
             onFocus={() => setIsFocused(true)} onBlur={() => { if (!chatInput) setIsFocused(false); }}
-            placeholder={isFocused ? 'Ask about your portfolio companies...' : ''}
+            placeholder={isFocused ? 'Use # for sectors/categories, @ for columns...' : ''}
             style={{ width: '100%', border: 'none', outline: 'none', background: 'transparent', fontSize: '0.82rem', color: 'hsl(var(--foreground))', lineHeight: '40px', fontFamily: 'inherit' }}
           />
         </div>
         <button data-testid="chat-send-button" style={{
-          width: 36, height: 36, borderRadius: 12, background: 'linear-gradient(135deg, hsl(340 82% 52%), hsl(24 95% 53%))',
-          border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, opacity: chatInput ? 1 : 0.5,
+          width: 36, height: 36, borderRadius: 10, background: '#3a9e7e',
+          border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+          opacity: chatInput ? 1 : 0.5, transition: 'opacity 0.15s ease',
         }}>
-          <Send size={14} color="white" />
+          <ArrowUp size={18} color="white" strokeWidth={2.5} />
         </button>
       </div>
       <div style={{ textAlign: 'center', marginTop: 4 }}>
