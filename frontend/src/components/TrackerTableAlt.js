@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { ExternalLink, Plus, ChevronDown, TrendingUp, TrendingDown, Filter, X } from 'lucide-react';
+import { ExternalLink, ChevronDown, TrendingUp, TrendingDown, Filter, X } from 'lucide-react';
 import {
   initialCompanies,
   quarterlyData,
@@ -139,7 +139,6 @@ export const TrackerTableAlt = () => {
   const [revenueFilter, setRevenueFilter] = useState('');
   const [numericFilters, setNumericFilters] = useState(INIT_NUMERIC);
 
-  const [addModalOpen, setAddModalOpen] = useState(false);
   const [hoveredRow, setHoveredRow] = useState(null);
 
   const setNumField = (col, field, val) =>
