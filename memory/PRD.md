@@ -1,124 +1,73 @@
-# Growth Equity Fund Tracker - PRD
+# Growth Equity Fund Tracker — PRD
 
 ## Original Problem Statement
-Build a company tracking dashboard called "Growth Equity Fund Tracker" - a professional, light-themed UI with a horizontally scrollable data table built with TanStack Table v8.
+Build a company tracking dashboard called "Growth Equity Fund Tracker" with:
+- A professional, light-themed UI
+- Horizontally scrollable data table with frozen left columns
+- Interactive headers for Quarter/Month selection
+- Growth toggles and numeric filters
+- Inline dropdown filters for Sector, Category, Revenue Range
+- Min/max numeric range filters for all numeric columns
+- "+ Add Company" modal (Company Name + Website only)
+- 30 companies with provided sectors and categories
+- A second alternate tracker at `/alt-tracker` with different companies, sectors (healthcare, e-commerce, tech, real estate), and categories — hardcoded, not editable
 
-## Core Requirements
-
-### Table Structure
-- **Frozen Columns (Left Section)**: Company Name, Website, Sector, Category (sticky on horizontal scroll)
-- **Annual Data**: Revenue Range column
-- **Company Offerings**: Multi-line summary of products/services
-- **Quarterly Data**: Group header dropdown (Q1-Q4 FY25) with 5 sub-columns (News Highlights, Customer Wins, Partnerships, CXO Changes, New Products)
-- **Monthly Data**: Group header dropdown for month selection with 4 sub-columns (LinkedIn Followers, Headcount, Job Openings, Web Traffic)
-
-### Filtering
-- Dropdown filters for Sector and Category
-- Dropdown filter for Revenue Range
-- Min/Max range filters for all numeric columns (both raw value and growth %)
-
-### Data
-- 30 companies with realistic FinTech sector data
-- Sectors: Banking Tech & BaaS, Capital Markets Infra, Enterprise FinOps, India Stack, Insurance & InsurTech, Lending
-- Categories (Subsectors): eKYC APIs, Treasury & ALM Systems, Testing & Certification, Workflow & Test Automation, Exchanges, Depositories, WM Softwares, Crypto Exchanges, Algo/Quant Platforms, Market Data Providers, Payroll & Expense Mgmt, ERP/GST Integration, Accounts Receivable, Accounts Payable, Treasury Management, Reconciliation Solutions, Background Verification, Account Aggregators, Consent Managers, eSign/eStamp Providers, eKYC APIs, DigiLocker Integrators, OCEN Lenders, Digital Insurers, PoSP/Agent Platforms, Embedded Insurance, Health/Wellness Tech, Digital Distribution, BNPL, Auto & Two-wheeler Loans
-
-### Modal
-- Add Company modal with only Company Name and Website fields
-
-## Tech Stack
-- **Frontend**: React
-- **UI Components**: Shadcn/UI
-- **Styling**: Tailwind CSS with HSL-based CSS variables
-- **Data Table**: TanStack Table v8
-- **State Management**: Local React state (no backend)
-
-## What's Been Implemented (December 2025)
-
-### ✅ Completed Features
-1. **Dashboard Layout**
-   - Light-themed professional design
-   - Horizontally scrollable table with frozen columns
-   - Company count display (30 companies)
-
-2. **Table Structure**
-   - Frozen columns: Company Name, Website, Sector, Category
-   - Column groups with headers
-   - Quarterly data selector (Q1-Q4 FY25)
-   - Monthly data selector (Jan-Apr 2025)
-   - Growth toggles (1M, 3M, 6M, YoY) for each metric
-
-3. **Filtering System**
-   - Sector dropdown filter
-   - Category dropdown filter (filters by subsector)
-   - Revenue Range dropdown filter
-   - Min/Max range filters for all numeric columns
-   - Clear all filters button
-
-4. **Data**
-   - 30 realistic FinTech companies
-   - Quarterly data (News, Customer Wins, Partnerships, CXO Changes, Products)
-   - Monthly data (LinkedIn Followers, Headcount, Jobs, Web Traffic)
-   - Growth percentages for all periods (1M, 3M, 6M, YoY)
-
-5. **Add Company Modal**
-   - Simplified to only Company Name and Website fields
-   - Validation for required fields
+## Architecture
+- **Frontend-only React app** — no backend APIs
+- React + Tailwind CSS + Shadcn/UI
+- React Router v7 for routing (`/` and `/alt-tracker`)
+- All data hardcoded in JS files
+- TanStack-style custom table implementation
 
 ## File Structure
 ```
 /app/frontend/src/
-├── App.js                    # Main app component
-├── index.css                 # Global styles & design tokens
-├── data/
-│   └── companies.js          # 30 companies + quarterly/monthly/growth data
-├── pages/
-│   └── (uses App.js)
-└── components/
-    ├── DashboardHeader.js    # Header with title and stats
-    ├── TrackerTable.js       # Main table component
-    ├── AddCompanyModal.js    # Simplified add company form
-    └── ui/                   # Shadcn UI components
+  App.js                    — BrowserRouter with / and /alt-tracker routes
+  index.js                  — React entry point
+  index.css                 — Global styles & CSS variables
+  data/
+    companies.js            — Main tracker data (30 FinTech companies)
+    companiesAlt.js         — Alt tracker data (30 multi-sector companies + interactionData)
+  components/
+    TrackerTable.js         — Main tracker table component
+    TrackerTableAlt.js      — Alt tracker with interaction columns + AI chat bar
+    DashboardHeader.js      — Header component
+    AddCompanyModal.js      — Add company modal (main tracker only)
+    ui/                     — Shadcn UI components
 ```
 
-## Key Data Models
-```javascript
-// Company object
-{
-  id: string,
-  name: string,
-  website: string,
-  sector: string,        // "Banking Tech & BaaS", "Capital Markets Infra", etc.
-  subsector: string,     // "eKYC APIs", "Treasury & ALM Systems", etc.
-  revenueRange: string,  // "< $1M", "$1M–$10M", "$10M–$50M", etc.
-  offeringsSummary: string
-}
+## What's Been Implemented
 
-// Monthly data per company
-{
-  linkedinFollowers: number,
-  linkedinHeadcount: number,
-  linkedinJobs: number,
-  webTraffic: number
-}
+### Main Tracker (`/`) — COMPLETE
+- 30 FinTech companies with full data
+- Frozen columns (Company Name, Website, Sector, Category)
+- Interactive quarter/month selectors
+- Growth toggles (1M, 3M, 6M, YoY)
+- Min/max numeric filters for all metric columns
+- Sector, Category, Revenue Range dropdown filters
+- "+ Add Company" modal (Name + Website)
 
-// Growth data per period (1M, 3M, 6M, YoY)
-{
-  linkedinFollowers: number (percentage),
-  linkedinHeadcount: number (percentage),
-  linkedinJobs: number (percentage),
-  webTraffic: number (percentage)
-}
-```
+### Alternate Tracker (`/alt-tracker`) — COMPLETE
+- 30 companies across 6 sectors: Healthcare & MedTech, E-commerce & Retail, EdTech & Learning, Real Estate & PropTech, SaaS & Enterprise, Consumer & D2C
+- Read-only mode (no Add Company button)
+- All existing table features (filters, selectors, growth toggles)
+- **Interaction Tracking column group** (NEW):
+  - Google Calendar, Gmail, Outlook logos in header with "Connected" badge
+  - Last Interaction Date (with relative "X days ago")
+  - Interaction Type (Email/Meeting/Call badges with icons)
+  - Key Discussion Points (bullet lists)
+  - Next Steps (bullet lists)
+- **AI Chat Bar** (NEW):
+  - Floating bar at bottom of page
+  - Rotating example queries with colored sector/category badges
+  - Input field with focus behavior
+  - Send button with gradient styling
+  - 10 example queries cycling every 4 seconds
 
-## Backlog / Future Enhancements
-- Backend integration for persistent data storage
-- Export to CSV/Excel functionality
-- Company detail view/modal
-- Charts and visualizations for trends
-- User authentication
-- Data import from external sources (LinkedIn API, etc.)
+## Backlog
+- P2: Refactor TrackerTable.js and TrackerTableAlt.js into a single reusable component
+- P3: Connect AI chat bar to actual LLM for portfolio intelligence queries
 
-## Notes
-- This is a frontend-only prototype
-- All data is managed in local state
-- No backend/database connection
+## Testing Status
+- All features verified via testing agent (iteration_1.json — 100% pass rate)
+- Main tracker and alt tracker both functional
