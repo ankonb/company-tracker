@@ -103,7 +103,7 @@ const MetricCell = ({ value, growth, positive }) => (
   </div>
 );
 
-const FinancialCell = ({ value, growth, format }) => (
+const FinancialCell = ({ value, growth, format, showYoY = false }) => (
   <div>
     <div style={{ fontWeight: 700, fontSize: '0.82rem', color: 'hsl(var(--foreground))' }}>
       {format === 'pct' ? `${value}%` : fmtINR(value)}
@@ -116,7 +116,7 @@ const FinancialCell = ({ value, growth, format }) => (
       border: `1px solid ${growth >= 0 ? 'hsl(142 76% 78%)' : 'hsl(0 84% 78%)'}`,
     }}>
       {growth >= 0 ? <TrendingUp size={9} /> : <TrendingDown size={9} />}
-      {Math.abs(growth).toFixed(1)}% YoY
+      {growth >= 0 ? '+' : ''}{growth.toFixed(1)}%{showYoY ? ' YoY' : ''}
     </div>
   </div>
 );
@@ -398,12 +398,7 @@ export const TrackerTableAlt = () => {
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 flex-shrink-0" style={{ background: 'hsl(var(--card))', borderBottom: '1px solid hsl(var(--border))' }}>
         <div className="flex items-center gap-3">
-          <div className="flex-shrink-0" style={{ width: 36, height: 36 }}>
-            <svg width="36" height="36" viewBox="0 0 40 40" fill="none">
-              <rect x="2" y="8" width="24" height="24" rx="2" fill="none" stroke="#0d4d57" strokeWidth="3"/>
-              <rect x="14" y="4" width="22" height="22" rx="2" fill="#3a9e7e"/>
-            </svg>
-          </div>
+          <img src="/pascal-ai-logo.png" alt="Pascal AI" style={{ height: 32 }} />
           <div>
             <h1 className="text-lg font-semibold" style={{ color: 'hsl(var(--foreground))' }} data-testid="alt-tracker-title">Company Tracker</h1>
             <p className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>Multi-sector company monitoring dashboard</p>
