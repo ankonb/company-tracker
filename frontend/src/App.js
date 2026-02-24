@@ -1,13 +1,20 @@
 import "./App.css";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { TrackerTable } from "./components/TrackerTable";
+import { TrackerTableAlt } from "./components/TrackerTableAlt";
 import { Toaster } from "./components/ui/sonner";
 
 function App() {
   return (
-    <div style={{ background: 'hsl(var(--background))', minHeight: '100vh' }}>
-      <TrackerTable />
-      <Toaster />
-    </div>
+    <BrowserRouter>
+      <div style={{ background: 'hsl(var(--background))', minHeight: '100vh' }}>
+        <Routes>
+          <Route path="/" element={<TrackerTable />} />
+          <Route path="/alt-tracker" element={<TrackerTableAlt />} />
+        </Routes>
+        <Toaster />
+      </div>
+    </BrowserRouter>
   );
 }
 
