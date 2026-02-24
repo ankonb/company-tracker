@@ -455,7 +455,7 @@ export const TrackerTableAlt = () => {
 
               {/* Annual: Revenue */}
               <th className="tracker-th" data-testid="col-revenue" style={{ minWidth: 160, borderLeft: '2px solid hsl(var(--border))' }}>
-                <div className="flex items-center gap-1">Revenue (\u20B9) {rangeActive(financialFilters.revenue) && <span className="filter-active-dot" />}</div>
+                <div className="flex items-center gap-1">{'Revenue (\u20B9)'} {rangeActive(financialFilters.revenue) && <span className="filter-active-dot" />}</div>
                 <MinMaxFilter labelPrefix="Value (Cr)" minVal={financialFilters.revenue.valueMin} maxVal={financialFilters.revenue.valueMax} onMinChange={v => setFinField('revenue','valueMin',v)} onMaxChange={v => setFinField('revenue','valueMax',v)} />
                 <MinMaxFilter labelPrefix="Growth %" minVal={financialFilters.revenue.growthMin} maxVal={financialFilters.revenue.growthMax} onMinChange={v => setFinField('revenue','growthMin',v)} onMaxChange={v => setFinField('revenue','growthMax',v)} />
               </th>
@@ -467,7 +467,7 @@ export const TrackerTableAlt = () => {
               </th>
               {/* Annual: EBITDA */}
               <th className="tracker-th" data-testid="col-ebitda" style={{ minWidth: 160 }}>
-                <div className="flex items-center gap-1">EBITDA (\u20B9) {rangeActive(financialFilters.ebitda) && <span className="filter-active-dot" />}</div>
+                <div className="flex items-center gap-1">{'EBITDA (\u20B9)'} {rangeActive(financialFilters.ebitda) && <span className="filter-active-dot" />}</div>
                 <MinMaxFilter labelPrefix="Value (Cr)" minVal={financialFilters.ebitda.valueMin} maxVal={financialFilters.ebitda.valueMax} onMinChange={v => setFinField('ebitda','valueMin',v)} onMaxChange={v => setFinField('ebitda','valueMax',v)} />
                 <MinMaxFilter labelPrefix="Growth %" minVal={financialFilters.ebitda.growthMin} maxVal={financialFilters.ebitda.growthMax} onMinChange={v => setFinField('ebitda','growthMin',v)} onMaxChange={v => setFinField('ebitda','growthMax',v)} />
               </th>
