@@ -1,68 +1,46 @@
 # Growth Equity Fund Tracker — PRD
 
 ## Original Problem Statement
-Build a company tracking dashboard called "Growth Equity Fund Tracker" with:
-- Professional, light-themed UI with horizontally scrollable data table
-- Frozen left columns (Company Name, Website, Sector, Category)
-- Interactive headers for Quarter/Month/Year selection
-- Growth toggles, numeric filters, inline dropdown filters
-- "+ Add Company" modal (Company Name + Website only)
-- 30 companies with provided sectors and categories
-- Second alternate tracker at `/alt-tracker` with different companies/sectors
+Build a company tracking dashboard called "Growth Equity Fund Tracker" with a professional light-themed UI, horizontally scrollable data table, frozen columns, interactive headers, filters, and a second alternate tracker at `/alt-tracker`.
 
 ## Architecture
-- **Frontend-only React app** — no backend APIs, all data hardcoded in JS
+- **Frontend-only React app** — no backend, all data hardcoded in JS
 - React + Tailwind CSS + Shadcn/UI + React Router v7
-- Routes: `/` (main tracker), `/alt-tracker` (company tracker)
+- Routes: `/` (main tracker), `/alt-tracker` (Company Tracker)
 
 ## File Structure
 ```
 /app/frontend/src/
-  App.js                    — BrowserRouter with / and /alt-tracker routes
-  index.js, index.css       — Entry point and global styles
-  data/
-    companies.js            — Main tracker data (30 FinTech companies)
-    companiesAlt.js         — Alt tracker data (30 multi-sector companies + interactionData + annualFinancialData)
-  components/
-    TrackerTable.js         — Main tracker table component
-    TrackerTableAlt.js      — Alt "Company Tracker" with financial columns, interaction tracking, AI chat bar
-    DashboardHeader.js      — Header component
-    AddCompanyModal.js      — Add company modal (both trackers)
-    ui/                     — Shadcn UI components
+  App.js, index.js, index.css
+  data/companies.js, data/companiesAlt.js
+  components/TrackerTable.js, TrackerTableAlt.js, AddCompanyModal.js, DashboardHeader.js, ui/
 ```
 
-## What's Been Implemented
+## What's Implemented
 
 ### Main Tracker (`/`) — COMPLETE
-- 30 FinTech companies, frozen columns, interactive quarter/month selectors
-- Growth toggles (1M, 3M, 6M, YoY), min/max numeric filters
-- Sector, Category, Revenue Range dropdown filters
-- "+ Add Company" modal
+- 30 FinTech companies, frozen columns, quarter/month selectors, growth toggles, filters, Add Company modal
 
-### Alt Tracker (`/alt-tracker`) — COMPLETE
-- **Title:** "Company Tracker" (not Portfolio Tracker)
-- 30 companies across 6 sectors: Healthcare & MedTech, E-commerce & Retail, EdTech & Learning, Real Estate & PropTech, SaaS & Enterprise, Consumer & D2C
-- **Add Company button** present
-- **Colored category badges** matching sector colors
-- **Annual Data** column group with **year selector** (FY22-FY25):
-  - Revenue (₹ Crores) with bold values + YoY growth % in green/red boxes
-  - Gross Margin (%) with growth boxes
-  - EBITDA (₹ Crores) with growth boxes
-  - Min/max filters for both value and growth on all three metrics
-- **Interaction Tracking** column group with Google Calendar/Gmail/Outlook logos:
-  - Last Interaction date with From/To date filter
-  - Last Interaction Type with multi-select filter (Email/Meeting/Call)
-  - Key Discussion Points (bullet lists)
-  - Next Steps (bullet lists)
-- **AI Chat Bar** with rotating example queries featuring:
-  - Colored sector/category badges (pink, orange, purple, green, etc.)
-  - Gray column-header badges (Customer Wins, Headcount, Revenue, etc.)
-  - "AI-powered company intelligence" footer text
+### Alt "Company Tracker" (`/alt-tracker`) — COMPLETE
+- **Pascal AI logo** (two overlapping rectangles: dark teal outline + green square) in top-left
+- **Title:** "Company Tracker"
+- **White Add Company button** (clean border, no red gradient)
+- 30 companies, 6 sectors, colored category badges
+- **Annual Data** (FY22-FY25 year selector): Revenue (₹ Cr), Gross Margin (%), EBITDA (₹ Cr) with YoY growth boxes + min/max filters
+- **Quarterly Data** (Q1-Q4 FY25): News, Wins, Partnerships, CXO, Products
+- **Monthly Data**: LinkedIn Followers/Headcount/Jobs, Web Traffic with growth toggles + filters
+- **Interaction Tracking** (Google Calendar/Gmail/Outlook logos): Last Interaction with date filter, Last Interaction Type with multi-select filter, Key Discussion Points, Next Steps
+- **AI Chat Bar**: 
+  - `#` prefix for sector/category badges, `@` prefix for column name badges
+  - Tutorial slide in rotation showing # and @ usage
+  - Green rounded send button with white up arrow
+  - "AI-powered company intelligence" footer
 
 ## Backlog
-- P2: Refactor TrackerTable.js and TrackerTableAlt.js into single reusable component
-- P3: Connect AI chat bar to actual LLM for portfolio intelligence queries
+- P2: Merge TrackerTable.js and TrackerTableAlt.js into single reusable component
+- P3: Connect AI chat bar to actual LLM
 
-## Testing Status
-- iteration_1.json: 10/10 passed (initial interaction columns + chat bar)
-- iteration_2.json: 16/16 passed (all major updates verified)
+## Testing
+- iteration_1.json: 10/10 passed
+- iteration_2.json: 16/16 passed  
+- iteration_3.json: 8/8 passed (UI refinements)
