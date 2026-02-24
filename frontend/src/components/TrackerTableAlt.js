@@ -200,18 +200,25 @@ const INIT_FINANCIAL = {
 };
 const rangeActive = (f) => f.valueMin !== '' || f.valueMax !== '' || f.growthMin !== '' || f.growthMax !== '';
 
-// ═══════ Chat examples with colored badges ═══════
+// ═══════ Chat examples with # for sectors/categories, @ for columns ═══════
 const CHAT_EXAMPLES = [
-  { parts: ['Which companies in the ', { badge: 'Telemedicine' }, ' category had greater than 2 ', { colBadge: 'Customer Wins' }, '?'] },
-  { parts: ['Create a market research report using the latest call transcripts for the ', { badge: 'Healthcare & MedTech' }, ' sector'] },
-  { parts: ['List companies that have grown their ', { colBadge: 'Headcount' }, ' by >10x in the ', { badge: 'K-12 Education' }, ' category'] },
-  { parts: ['Summarize ', { colBadge: 'Key Discussion Points' }, ' from all recent meetings with ', { badge: 'SaaS & Enterprise' }, ' companies'] },
-  { parts: ['Which ', { badge: 'E-commerce & Retail' }, ' companies have ', { colBadge: 'Web Traffic' }, ' above 5M and positive YoY growth?'] },
-  { parts: ['Compare ', { colBadge: 'Next Steps' }, ' across all ', { badge: 'Real Estate & PropTech' }, ' portfolio companies'] },
-  { parts: ['Show companies in the ', { badge: 'Food Tech' }, ' category with ', { colBadge: 'Revenue' }, ' above \u20B9500 Cr'] },
-  { parts: ['Generate competitive analysis for ', { badge: 'Cybersecurity' }, ' companies based on ', { colBadge: 'New Products & Launches' }, ''] },
-  { parts: ['Which ', { badge: 'Consumer & D2C' }, ' companies have IPO-related discussions in their ', { colBadge: 'Key Discussion Points' }, '?'] },
-  { parts: ['Find all ', { badge: 'EdTech & Learning' }, ' companies with ', { colBadge: 'LinkedIn Followers' }, ' growth above 15%'] },
+  { parts: ['Which companies in ', { badge: 'Telemedicine', prefix: '#' }, ' had greater than 2 ', { colBadge: 'Customer Wins', prefix: '@' }, '?'] },
+  { parts: ['Create a market research report for the ', { badge: 'Healthcare & MedTech', prefix: '#' }, ' sector using ', { colBadge: 'Key Discussion Points', prefix: '@' }] },
+  { parts: ['List companies with ', { colBadge: 'Headcount', prefix: '@' }, ' growth >10x in ', { badge: 'K-12 Education', prefix: '#' }] },
+  { parts: ['Summarize ', { colBadge: 'Key Discussion Points', prefix: '@' }, ' from all meetings with ', { badge: 'SaaS & Enterprise', prefix: '#' }, ' companies'] },
+  { parts: ['Which ', { badge: 'E-commerce & Retail', prefix: '#' }, ' companies have ', { colBadge: 'Web Traffic', prefix: '@' }, ' above 5M?'] },
+  { parts: ['Compare ', { colBadge: 'Next Steps', prefix: '@' }, ' across all ', { badge: 'Real Estate & PropTech', prefix: '#' }, ' companies'] },
+  { parts: ['Show companies in ', { badge: 'Food Tech', prefix: '#' }, ' with ', { colBadge: 'Revenue', prefix: '@' }, ' above \u20B9500 Cr'] },
+  { parts: ['Generate analysis for ', { badge: 'Cybersecurity', prefix: '#' }, ' based on ', { colBadge: 'New Products & Launches', prefix: '@' }] },
+  { parts: ['Which ', { badge: 'Consumer & D2C', prefix: '#' }, ' companies discuss IPO in ', { colBadge: 'Key Discussion Points', prefix: '@' }, '?'] },
+  { parts: ['Find ', { badge: 'EdTech & Learning', prefix: '#' }, ' companies with ', { colBadge: 'LinkedIn Followers', prefix: '@' }, ' growth above 15%'] },
+  // Tutorial slide — shown after each full cycle
+  { isTutorial: true, parts: [
+    { text: 'Type ' },
+    { symbol: '#', label: 'to select a sector or category', style: 'hash' },
+    { text: '  and  ' },
+    { symbol: '@', label: 'to select a column name', style: 'at' },
+  ]},
 ];
 
 const ChatBar = () => {
