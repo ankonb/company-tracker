@@ -10,7 +10,7 @@ function App() {
       <div style={{ background: 'hsl(var(--background))', minHeight: '100vh' }}>
         <Routes>
           <Route path="/" element={<TrackerTable />} />
-          <Route path="/alt-tracker" element={<TrackerTableAlt />} />
+          <Route path="/company-tracker" element={<TrackerTableAlt />} />
         </Routes>
         <Toaster />
       </div>
